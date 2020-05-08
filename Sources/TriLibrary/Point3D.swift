@@ -6,7 +6,7 @@
 //  Copyright © 2018 Ceran Digital Media. All rights reserved.  See LICENSE.md
 //
 
-import Quartz
+import Foundation
 
 /// Simple representation of a position in space by the use of three orthogonal coordinates.
 /// The default initializer suffices.
@@ -50,37 +50,6 @@ public struct  Point3D: Hashable {
     }
     
     
-    /// Draw crosshairs to show point locations
-    /// This needs to be added to SketchGen
-    /// - Parameters:
-    ///   - pip:  Location to be illustrated
-    ///   - halfLength:  Optional size for half of each stroke
-    /// - Returns: Array of three LineSeg's to be plotted
-    public static func crosshair(pip: Point3D, halfLength: Double = 0.1) -> [LineSeg]  {
-        
-        /// The array to be returned
-        var dashes = [LineSeg]()
-        
-        var penDown = Point3D(x: pip.x - halfLength, y: pip.y, z: pip.z)
-        var penUp = Point3D(x: pip.x + halfLength, y: pip.y, z: pip.z)
-        
-        var dash = try! LineSeg(end1: penDown, end2: penUp)
-        dashes.append(dash)
-        
-        penDown = Point3D(x: pip.x, y: pip.y - halfLength, z: pip.z)
-        penUp = Point3D(x: pip.x, y: pip.y + halfLength, z: pip.z)
-        
-        dash = try! LineSeg(end1: penDown, end2: penUp)
-        dashes.append(dash)
-        
-        penDown = Point3D(x: pip.x, y: pip.y, z: pip.z - halfLength)
-        penUp = Point3D(x: pip.x, y: pip.y, z: pip.z + halfLength)
-        
-        dash = try! LineSeg(end1: penDown, end2: penUp)
-        dashes.append(dash)
-        
-        return dashes
-    }
     
     /// Calculate the distance between two of 'em
     /// - Parameters:
@@ -159,6 +128,23 @@ public struct  Point3D: Hashable {
         return flag1
     }
     
+    
+    /// Check if all contained points are unique.
+    /// - Parameters:
+    ///   - flock:  A collection of points
+    /// - Returns: A simple flag
+    /// - See: 'testUniquePool' under Point3DTests
+    public static func isUniquePool(flock: [Point3D]) -> Bool   {
+        
+        /// A hash set
+        let pool = Set<Point3D>(flock)
+                
+        /// All points have adequate separation
+        let flag = (pool.count == flock.count)
+        
+        return flag
+    }
+
     /// Throw away the Z value and convert
     /// Should this become a computed member variable?
     public static func makeCGPoint(pip: Point3D) -> CGPoint   {

@@ -10,6 +10,8 @@ import Quartz
 
 /// A wire between two points.
 public class LineSeg: PenCurve {
+    
+    
     // Can this be a struct, instead?
     
     // End points
@@ -18,7 +20,7 @@ public class LineSeg: PenCurve {
         
     /// The enum that hints at the meaning of the curve
     open var usage: PenTypes
-
+    
     open var parameterRange: ClosedRange<Double>
     
     /// Build a line segment from two points
@@ -29,6 +31,7 @@ public class LineSeg: PenCurve {
         
         self.endAlpha = end1
         self.endOmega = end2
+        
         
         self.usage = PenTypes.Ordinary
         
@@ -50,15 +53,6 @@ public class LineSeg: PenCurve {
     }
     
     
-    /// Flip the order of the end points  Used to align members of a Perimeter
-    open func reverse() -> Void  {
-        
-        let bubble = self.endAlpha
-        self.endAlpha = self.endOmega
-        self.endOmega = bubble
-    }
-    
-    
     /// Attach new meaning to the curve
     open func setIntent(purpose: PenTypes)   {
         
@@ -71,18 +65,12 @@ public class LineSeg: PenCurve {
         return try! OrthoVol(corner1: self.endAlpha, corner2: self.endOmega)
     }
     
-    
-    /// Find the point along this line segment specified by the parameter 't'
-    /// Assumes 0 < t < 1
-    open func pointAt(t: Double) throws -> Point3D  {
+    /// Flip the order of the end points  Used to align members of a Perimeter
+    open func reverse() -> Void  {
         
-        let wholeVector = Vector3D.built(from: self.endAlpha, towards: self.endOmega, unit: false)
-        
-        let scaled = wholeVector * t
-        
-        let spot = self.endAlpha.offset(jump: scaled)
-        
-        return spot
+        let bubble = self.endAlpha
+        self.endAlpha = self.endOmega
+        self.endOmega = bubble
     }
     
     
@@ -97,6 +85,22 @@ public class LineSeg: PenCurve {
         transformed.setIntent(purpose: self.usage)   // Copy setting instead of having the default
         
         return transformed
+    }
+
+    
+    
+    /// Find the point along this line segment specified by the parameter 't'
+    /// Assumes 0 < t < 1
+    /// - Throws: CoincidentPointsError
+    open func pointAt(t: Double) -> Point3D  {
+        
+        let wholeVector = Vector3D.built(from: self.endAlpha, towards: self.endOmega, unit: false)
+        
+        let scaled = wholeVector * t
+        
+        let spot = self.endAlpha.offset(jump: scaled)
+        
+        return spot
     }
     
     
@@ -137,6 +141,21 @@ public class LineSeg: PenCurve {
     }
     
     
+    /// Find two distances describing the position of a point relative to the LineSeg.
+    /// - Parameters:
+    ///   - speck:  Point of interest
+    /// - Returns: Tuple of distances - one along the seg, other away from it
+    public func resolveRelative(speck: Point3D) -> (along: Double, away: Double)   {
+        
+        let components = resolveRelativeVec(speck: speck)
+        
+        let a = components.along.length()
+        let b = components.perp.length()
+        
+        return (a, b)
+    }
+    
+    
     /// Calculate length
     /// - Returns: Distance
     func getLength() -> Double   {
@@ -163,26 +182,6 @@ public class LineSeg: PenCurve {
     }
     
     
-    /// Create a String that is suitable JavaScript to draw the LineSeg
-    /// Assumes that the context has a plot location of the starting point for the LineSeg
-    /// - Parameters:
-    ///   - xirtam:  Model-to-display transform
-    /// - Returns: String consisting of JavaScript to plot
-    public func jsDraw(xirtam: Transform) -> String {
-        
-        /// The output line
-        var singleLine: String
-        
-        let plotEnd = self.getOtherEnd().transform(xirtam: xirtam)
-        
-        let endX = Int(plotEnd.x + 0.5)   // The default is to round towards zero
-        let endY = Int(plotEnd.y + 0.5)
-        
-        singleLine = "ctx.lineTo(" + String(endX) + ", " + String(endY) + ");\n"
-        
-        return singleLine
-    }
-    
 
     /// Create a trimmed version
     /// - Parameters:
@@ -205,38 +204,55 @@ public class LineSeg: PenCurve {
     }
     
     
-    
-    /// Draw crosshairs to show point locations
-    /// This needs to be added to SketchGen
+    /// Find possible intersection points with a line
     /// - Parameters:
-    ///   - pip:  Location to be illustrated
-    ///   - halfLength:  Optional size for half of each stroke
-    /// - Returns: Array of three LineSeg's to be plotted
-    public static func crosshair(pip: Point3D, halfLength: Double = 0.1) -> [LineSeg]  {
+    ///   - ray:  The Line to be used for intersecting
+    ///   - accuracy:  How close is close enough?
+    /// - Returns: Possibly empty Array of points common to both curves
+    /// - See: 'testIntersectLine' under LineSegTests
+    public func intersect(ray: Line, accuracy: Double = Point3D.Epsilon) -> [Point3D] {
         
-        /// The array to be returned
-        var dashes = [LineSeg]()
+        /// The return array
+        var crossings = [Point3D]()
         
-        var penDown = Point3D(x: pip.x - halfLength, y: pip.y, z: pip.z)
-        var penUp = Point3D(x: pip.x + halfLength, y: pip.y, z: pip.z)
+        /// Line built from this segment
+        let unbounded = try! Line(spot: self.getOneEnd(), arrow: self.getDirection())
         
-        var dash = try! LineSeg(end1: penDown, end2: penUp)
-        dashes.append(dash)
+        if Line.isParallel(straightA: unbounded, straightB: ray)   {   // Deal with parallel lines
+            
+            if Line.isCoincident(straightA: unbounded, straightB: ray)   {   // Coincident lines
+                
+                crossings.append(self.getOneEnd())
+                crossings.append(self.getOtherEnd())
+                
+            }
+            
+        }  else  {   // Not parallel lines
+            
+            /// Intersection of the two lines
+            let collision = try! Line.intersectTwo(straightA: unbounded, straightB: ray)
+            
+            /// Vector from segment origin towards intersection
+            let rescue = Vector3D.built(from: self.getOneEnd(), towards: collision, unit: true)
+            
+            let sameDir = Vector3D.dotProduct(lhs: self.getDirection(), rhs: rescue)
+            
+            if sameDir > 0.0   {
+                
+                let dist = Point3D.dist(pt1: self.getOneEnd(), pt2: collision)
+                
+                if dist <= self.getLength()   {
+                    
+                    crossings.append(collision)
+                }
+            }
+        }
         
-        penDown = Point3D(x: pip.x, y: pip.y - halfLength, z: pip.z)
-        penUp = Point3D(x: pip.x, y: pip.y + halfLength, z: pip.z)
-        
-        dash = try! LineSeg(end1: penDown, end2: penUp)
-        dashes.append(dash)
-        
-        penDown = Point3D(x: pip.x, y: pip.y, z: pip.z - halfLength)
-        penUp = Point3D(x: pip.x, y: pip.y, z: pip.z + halfLength)
-        
-        dash = try! LineSeg(end1: penDown, end2: penUp)
-        dashes.append(dash)
-        
-        return dashes
+        return crossings
     }
+    
+    
+
     
     
     /// See if another segment crosses this one
