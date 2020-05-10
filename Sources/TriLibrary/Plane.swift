@@ -12,16 +12,19 @@ import Foundation
 public struct Plane   {
     
     /// A point to locate the plane
-    internal var location: Point3D
+    private var location: Point3D
     
     /// A vector perpendicular to the plane
-    internal var normal: Vector3D
+    private var normal: Vector3D
     
     
     /// Records parameters and checks to see that the normal is a legitimate vector
     /// - Parameters:
     ///   - alpha:  Origin for the fresh plane
     ///   - arrow:  Unit vector that the plane will be perpendicular to
+    /// - Throws:
+    ///   - ZeroVectorError for any bad input vector
+    ///   - NonUnitDirectionError for a different kind of badness
     /// - See: 'testFidelity' under PlaneTests
     public init(spot: Point3D, arrow: Vector3D) throws  {
         
@@ -41,7 +44,7 @@ public struct Plane   {
     /// - Returns: Fresh plane
     /// - Throws: CoincidentPointsError for duplicate or linear inputs
     /// - See: 'testInitPts' under PlaneTests
-    init(alpha: Point3D, beta: Point3D, gamma: Point3D) throws   {
+    public init(alpha: Point3D, beta: Point3D, gamma: Point3D) throws   {
         
         guard Point3D.isThreeUnique(alpha: alpha, beta: beta, gamma: gamma)  else  { throw CoincidentPointsError(dupePt: alpha) }
         
@@ -83,12 +86,12 @@ public struct Plane   {
     ///   - pip:  Point of interest
     /// - Returns: Tuple of Vectors
     /// - See: 'testResolveRelative' under PlaneTests
-    public func resolveRelativeVec(pip: Point3D) -> (inPlane: Vector3D, perp: Vector3D)   {
+    public static func resolveRelativeVec(flat: Plane, pip: Point3D) -> (inPlane: Vector3D, perp: Vector3D)   {
         
-        let bridge = Vector3D.built(from: self.location, towards: pip)
+        let bridge = Vector3D.built(from: flat.location, towards: pip)
         
-        let along = Vector3D.dotProduct(lhs: bridge, rhs: self.normal)
-        let perp = self.normal * along
+        let along = Vector3D.dotProduct(lhs: bridge, rhs: flat.normal)
+        let perp = flat.normal * along
         
         let inPlane = bridge - perp
         
@@ -111,10 +114,10 @@ public struct Plane   {
     /// - Returns: New point
     public static func mirror(flat: Plane, pip: Point3D) -> Point3D   {
         
-        let comps = flat.resolveRelativeVec(pip: pip)
+        let comps = Plane.resolveRelativeVec(flat: flat, pip: pip)
         
         let jump = comps.perp * -2.0
-        let fairest = pip.offset(jump: jump)
+        let fairest = Point3D.offset(pip: pip, jump: jump)
         
         return fairest
     }
@@ -128,18 +131,19 @@ public struct Plane   {
     public static func mirror(flat: Plane, wire: LineSeg) -> LineSeg   {
         
         var pip: Point3D = wire.getOneEnd()
-        var comps = flat.resolveRelativeVec(pip: pip)
+        var comps = Plane.resolveRelativeVec(flat: flat, pip: pip)
         
         var jump = comps.perp * -2.0
-        let fairest1 = pip.offset(jump: jump)
+        let fairest1 = Point3D.offset(pip: pip, jump: jump)
         
         pip = wire.getOtherEnd()
-        comps = flat.resolveRelativeVec(pip: pip)
+        comps = Plane.resolveRelativeVec(flat: flat, pip: pip)
         
         jump = comps.perp * -2.0
-        let fairest2 = pip.offset(jump: jump)
+        let fairest2 = Point3D.offset(pip: pip, jump: jump)
         
         let rail = try! LineSeg(end1: fairest1, end2: fairest2)
+        // TODO: What can be done to get rid of this forced resolution?
         
         return rail
     }
@@ -229,7 +233,7 @@ public struct Plane   {
         let jump = base.normal * offset    // Offset could be a negative number
         
         let origPoint = base.location
-        let newLoc = origPoint.offset(jump: jump)
+        let newLoc = Point3D.offset(pip: origPoint, jump: jump)
         
         
         var newNorm = base.normal
@@ -300,7 +304,7 @@ public struct Plane   {
         
         let inPlaneOffset = lineInPlaneComponent * factor
         
-        return projectedLineOrigin.offset(jump: inPlaneOffset)
+        return Point3D.offset(pip: projectedLineOrigin, jump: inPlaneOffset)
     }
     
     /// Construct a line by intersecting two planes
@@ -357,7 +361,7 @@ public struct Plane   {
         let bridgeNormComponent = enalp.getNormal() * distanceOffPlane
         let bridgeInPlaneComponent = bridge - bridgeNormComponent
         
-        return planeCenter.offset(jump: bridgeInPlaneComponent)   // Ignore the component normal to the plane
+        return Point3D.offset(pip: planeCenter, jump: bridgeInPlaneComponent)   // Ignore the component normal to the plane
     }
         
 }
@@ -368,10 +372,10 @@ public struct Plane   {
 /// - See: 'testEquals' under PlaneTests
 public func == (lhs: Plane, rhs: Plane) -> Bool   {
     
-    let flag1 = lhs.normal == rhs.normal    // Do they have the same direction?
+    let sameDir = lhs.getNormal() == rhs.getNormal()    // Do they have the same direction?
     
-    let flag2 = lhs.location == rhs.location    // Do they have identical locations?
+    let sameLoc = lhs.getLocation() == rhs.getLocation()    // Do they have identical locations?
     
-    return flag1 && flag2
+    return sameDir && sameLoc
 }
 

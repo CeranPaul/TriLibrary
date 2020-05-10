@@ -18,7 +18,7 @@ public struct Vector3D: Equatable {
     var k: Double
     
     /// Difference limit between components in equality checks
-    public static let EpsilonV: Double = 0.0001
+    public static var EpsilonV: Double = 0.0001
 
     
     
@@ -101,11 +101,11 @@ public struct Vector3D: Equatable {
     /// - Returns: A new Vector
     /// - SeeAlso:  transform()
     /// - See: 'testTwistAbout' under Vector3DTests
-    func twistAbout(axisDir: Vector3D, angleRad: Double) -> Vector3D  {   // Should this become a static func?
+    public static func twistAbout(arrow: Vector3D, axisDir: Vector3D, angleRad: Double) -> Vector3D  {   // Should this become a static func?
         
-        let perp = try! Vector3D.crossProduct(lhs: axisDir, rhs: self)
+        let perp = try! Vector3D.crossProduct(lhs: axisDir, rhs: arrow)
         
-        let alongStep = self * cos(angleRad)
+        let alongStep = arrow * cos(angleRad)
         let perpStep = perp * sin(angleRad)
         
         var rotated = alongStep + perpStep

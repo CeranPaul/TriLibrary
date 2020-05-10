@@ -9,15 +9,15 @@
 import Foundation
 
 /// Three coordinates and three orthogonal axes
-open class CoordinateSystem   {
+public struct CoordinateSystem   {
     
     /// Can be changed with 'relocate' function
-    var origin: Point3D
+    private var origin: Point3D
     
-       // To assure the property of being mutually orthogonal
-    var axisX: Vector3D
-    var axisY: Vector3D
-    var axisZ: Vector3D
+    /// The cardinal directions.  Initializers check that the set is mutually orthogonal
+    private var axisX: Vector3D
+    private var axisY: Vector3D
+    private var axisZ: Vector3D
     
     
     /// Construct an equivalent to the global CSYS.
@@ -57,7 +57,7 @@ open class CoordinateSystem   {
         self.axisZ = gamma
         
         
-        guard (CoordinateSystem.isMutOrtho(uno: axisX, dos: axisY, tres: axisZ)) else { throw NonOrthogonalCSYSError() }
+        guard (try CoordinateSystem.isMutOrtho(uno: axisX, dos: axisY, tres: axisZ)) else { throw NonOrthogonalCSYSError() }
         
     }
     
@@ -72,11 +72,19 @@ open class CoordinateSystem   {
     ///   - verticalRef: Does the reference direction represent vertical or horizontal in the local plane?
     /// - Throws:
     ///   - NonUnitDirectionError for any bad input vector
+    ///   - IdenticalVectorError for non-unique inputs
+    ///   - ZeroVectorError
     /// - See: 'testFidelity3' under CoordinateSystemTests
     public init(spot: Point3D, direction1: Vector3D, direction2: Vector3D, useFirst: Bool, verticalRef: Bool) throws   {
         
-        guard (direction1.isUnit()) else {  throw NonUnitDirectionError(dir: direction1) }
-        guard (direction2.isUnit()) else {  throw NonUnitDirectionError(dir: direction2) }
+        //TODO: Add tests for additional guard cases
+        guard (!Vector3D.isOpposite(lhs: direction1, rhs: direction2)) else {  throw IdenticalVectorError(dir: direction1)  }
+        
+        let scaleFlag = try Vector3D.isScaled(lhs: direction1, rhs: direction2)
+        guard (!scaleFlag) else {  throw IdenticalVectorError(dir: direction1)  }
+        
+        guard (direction1.isUnit()) else {  throw NonUnitDirectionError(dir: direction1)  }
+        guard (direction2.isUnit()) else {  throw NonUnitDirectionError(dir: direction2)  }
 
         
         var outOfPlane = try Vector3D.crossProduct(lhs: direction1, rhs: direction2)
@@ -109,13 +117,14 @@ open class CoordinateSystem   {
         self.origin = spot
     }
     
-    
+    /// Simple getter
     public func getOrigin() -> Point3D   {
         
         return origin
     }
     
     
+    /// Simple getter
     public func getAxisX() -> Vector3D   {
         
         return axisX
@@ -123,6 +132,7 @@ open class CoordinateSystem   {
     }
     
     
+    /// Simple getter
     public func getAxisY() -> Vector3D   {
         
         return axisY
@@ -130,6 +140,7 @@ open class CoordinateSystem   {
     }
     
     
+    /// Simple getter
     public func getAxisZ() -> Vector3D   {
         
         return axisZ
@@ -138,13 +149,21 @@ open class CoordinateSystem   {
     
     
     /// Check to see that these three vectors are mutually orthogonal
+    ///  Should this routine also check that they are unit vectors?
     /// - Parameters:
     ///   - uno: Unit vector to serve as an axis
     ///   - dos: Another unit vector
     ///   - tres: The final unit vector
     ///   Returns: Simple flag
+    /// - Throws:
+    ///   - NonUnitDirectionError for any bad input vector
     /// - See: 'testIsMutOrtho' under CoordinateSystemTests
-    public static func isMutOrtho(uno: Vector3D, dos: Vector3D, tres: Vector3D) -> Bool   {
+    public static func isMutOrtho(uno: Vector3D, dos: Vector3D, tres: Vector3D) throws -> Bool   {
+        
+        guard (uno.isUnit()) else {  throw NonUnitDirectionError(dir: uno)  }
+        guard (dos.isUnit()) else {  throw NonUnitDirectionError(dir: dos)  }
+        guard (tres.isUnit()) else {  throw NonUnitDirectionError(dir: tres)  }
+
         
         let dot12 = Vector3D.dotProduct(lhs: uno, rhs: dos)
         let flag1 = abs(dot12) < Vector3D.EpsilonV
@@ -159,7 +178,7 @@ open class CoordinateSystem   {
     }
     
     
-    /// Create from an existing CSYS, but use a different origin
+    /// Create new from an existing CSYS, but use a different origin
     /// - Parameters:
     ///   - startingCSYS: Desired set of orientations
     ///   - betterOrigin: New location

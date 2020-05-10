@@ -10,7 +10,7 @@ import Foundation
 
 /// Matrix built the way I was taught in college, as opposed to being twisted to use SIMD.
 /// This uses some overloaded operators.
-open class Transform   {
+public struct Transform   {
     
     var a, b, c, d: Double   // Labeling is done across each row, then down
     var e, f, g, h: Double
@@ -201,10 +201,22 @@ open class Transform   {
     }
     
     /// Create a transform from orthogonal vectors
-    /// - Warning:  The vectors are not checked for orthogonality
+    /// - Throws:
+    ///   - NonUnitDirectionError for any bad input vector
+    ///   - NonOrthogonalCSYSError if the inputs, as a set, aren't good
     /// - Warning:  This makes no attempt to use the local origin
     /// - See: 'testRollYourOwn' under TransformTests
-    public init(localX: Vector3D, localY: Vector3D, localZ: Vector3D)   {
+    public init(localX: Vector3D, localY: Vector3D, localZ: Vector3D) throws   {
+        
+        guard (localX.isUnit()) else {  throw NonUnitDirectionError(dir: localX) }
+        
+        guard (localY.isUnit()) else {  throw NonUnitDirectionError(dir: localY) }
+        
+        guard (localZ.isUnit()) else {  throw NonUnitDirectionError(dir: localZ) }
+        
+        
+        guard (try CoordinateSystem.isMutOrtho(uno: localX, dos: localY, tres: localZ)) else { throw NonOrthogonalCSYSError() }
+        
         
         self.a = localX.i
         self.b = localX.j
@@ -231,10 +243,10 @@ open class Transform   {
     /// Generate a Transform to rotate and translate from a local CSYS TO the global coordinate system.
     /// Should this become a method of Transform?
     /// - See: 'testGenToGlobal' under CoordinateSystemTests for a partial set of tests
-    public static func genToGlobal(csys: CoordinateSystem) -> Transform   {
+    public static func genToGlobal(csys: CoordinateSystem) throws -> Transform   {
         
-        let rotate = Transform(localX: csys.axisX, localY: csys.axisY, localZ: csys.axisZ)
-        let translate = Transform(deltaX: csys.origin.x, deltaY: csys.origin.y, deltaZ: csys.origin.z)
+        let rotate = try Transform(localX: csys.getAxisX(), localY: csys.getAxisY(), localZ: csys.getAxisZ())
+        let translate = Transform(deltaX: csys.getOrigin().x, deltaY: csys.getOrigin().y, deltaZ: csys.getOrigin().z)
         
         let tform = rotate * translate
         
@@ -246,19 +258,19 @@ open class Transform   {
     public static func genFromGlobal(csys: CoordinateSystem) -> Transform   {
         
         // Construct the transpose of the 3 x 3
-        let newA = csys.axisX.i
-        let newB = csys.axisY.i
-        let newC = csys.axisZ.i
+        let newA = csys.getAxisX().i
+        let newB = csys.getAxisY().i
+        let newC = csys.getAxisZ().i
         let newD = 0.0
         
-        let newE = csys.axisX.j
-        let newF = csys.axisY.j
-        let newG = csys.axisZ.j
+        let newE = csys.getAxisX().j
+        let newF = csys.getAxisY().j
+        let newG = csys.getAxisZ().j
         let newH = 0.0
         
-        let newJ = csys.axisX.k
-        let newK = csys.axisY.k
-        let newM = csys.axisZ.k
+        let newJ = csys.getAxisX().k
+        let newK = csys.getAxisY().k
+        let newM = csys.getAxisZ().k
         let newN = 0.0
         
         let newP = 0.0
@@ -268,7 +280,7 @@ open class Transform   {
         
         let transpose = Transform(a: newA, b: newB, c: newC, d: newD, e: newE, f: newF, g: newG, h: newH, j: newJ, k: newK, m: newM, n: newN, p: newP, r: newR, s: newS, t: newT)
         
-        let rowOrig = RowMtx4(ptIn: csys.origin)
+        let rowOrig = RowMtx4(ptIn: csys.getOrigin())
         
         
         let flippedOrig = rowOrig * transpose
@@ -298,7 +310,7 @@ public enum Axis {
 
 /// Row matrix of length 4.
 /// Distinct from double4 in simD to control the order of operations.
-open class RowMtx4   {
+public struct RowMtx4   {
     
     var a, b, c, d:  Double
     
@@ -328,14 +340,14 @@ open class RowMtx4   {
     }
     
     /// Create a Point from the result
-    open func toPoint() -> Point3D   {
+    public func toPoint() -> Point3D   {
         
         return Point3D(x: a, y: b, z: c)
     }
     
     
     /// Create a Vector from the result
-    open func toVector() -> Vector3D   {
+    public func toVector() -> Vector3D   {
         
         return Vector3D(i: a, j: b, k: c)
     }
@@ -343,7 +355,7 @@ open class RowMtx4   {
 }   // End of definition for RowMtx4
 
 
-/// Compare two of 'em.
+/// Compare two Transforms
 /// - Parameters:
 ///   - lhs: First transform
 ///   - rhs: Second transform
@@ -456,6 +468,4 @@ public func * (lhs: Transform, rhs: Transform) -> Transform   {
     
     return Transform(a: resA, b: resB, c: resC, d: resD, e: resE, f: resF, g: resG, h: resH, j: resJ, k: resK, m: resM, n: resN, p: resP, r: resR, s: resS, t: resT)
 }
-
-
 

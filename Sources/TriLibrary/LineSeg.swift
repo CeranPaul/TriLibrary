@@ -6,7 +6,7 @@
 //  Copyright © 2018 Ceran Digital Media. All rights reserved.  See LICENSE.md
 //
 
-import Quartz
+import Foundation
 
 /// A wire between two points.
 public class LineSeg: PenCurve {
@@ -78,8 +78,8 @@ public class LineSeg: PenCurve {
     /// - Throws: CoincidentPointsError if it was scaled to be very small
     public func transform(xirtam: Transform) throws -> PenCurve {
         
-        let tAlpha = endAlpha.transform(xirtam: xirtam)
-        let tOmega = endOmega.transform(xirtam: xirtam)
+        let tAlpha = Point3D.transform(pip: endAlpha, xirtam: xirtam)
+        let tOmega = Point3D.transform(pip: endOmega, xirtam: xirtam)
         
         let transformed = try LineSeg(end1: tAlpha, end2: tOmega)   // Will generate a new extent
         transformed.setIntent(purpose: self.usage)   // Copy setting instead of having the default
@@ -98,7 +98,7 @@ public class LineSeg: PenCurve {
         
         let scaled = wholeVector * t
         
-        let spot = self.endAlpha.offset(jump: scaled)
+        let spot = Point3D.offset(pip: self.endAlpha, jump: scaled)
         
         return spot
     }

@@ -18,20 +18,40 @@ public struct  Point3D: Hashable {
 
     
     /// Threshhold of separation for equality checks
-    public static let Epsilon: Double = 0.0001
+    public static var Epsilon: Double = 0.0001
     
     
+    
+    /// Generate the unique value using Swift 4.2 tools
+    /// Is a required func for a subclass of Hashable
+    public func hash(into hasher: inout Hasher)   {
+        
+        let divX = self.x / Point3D.Epsilon
+        let myX = Int(round(divX))
+        
+        let divY = self.y / Point3D.Epsilon
+        let myY = Int(round(divY))
+        
+        let divZ = self.z / Point3D.Epsilon
+        let myZ = Int(round(divZ))
+        
+        hasher.combine(myX)
+        hasher.combine(myY)
+        hasher.combine(myZ)
+        
+    }
+
     
     /// Create a new point by offsetting
     /// - Parameters:
     ///   - jump:  Vector to be used as the offset
     /// - See: 'testOffset' under Point3DTests
     /// - SeeAlso:  transform
-    public func offset (jump: Vector3D) -> Point3D   {
+    public static func offset (pip: Point3D, jump: Vector3D) -> Point3D   {
         
-        let totalX = self.x + jump.i
-        let totalY = self.y + jump.j
-        let totalZ = self.z + jump.k
+        let totalX = pip.x + jump.i
+        let totalY = pip.y + jump.j
+        let totalZ = pip.z + jump.k
     
         return Point3D(x: totalX, y: totalY, z: totalZ)
     }
@@ -40,9 +60,9 @@ public struct  Point3D: Hashable {
     /// - Parameters:
     ///   - xirtam:  Matrix for the intended transformation
     /// - SeeAlso:  offset
-    public func transform(xirtam: Transform) -> Point3D {
+    public static func transform(pip: Point3D, xirtam: Transform) -> Point3D {
         
-        let pip4 = RowMtx4(valOne: self.x, valTwo: self.y, valThree: self.z, valFour: 1.0)
+        let pip4 = RowMtx4(valOne: pip.x, valTwo: pip.y, valThree: pip.z, valFour: 1.0)
         let tniop4 = pip4 * xirtam
         
         let transformed = tniop4.toPoint()
@@ -159,26 +179,6 @@ public struct  Point3D: Hashable {
         let separation = Point3D.dist(pt1: lhs, pt2: rhs)
         
         return separation < Point3D.Epsilon
-    }
-    
-    
-    /// Generate the unique value using Swift 4.2 tools
-    /// Is a required func for a subclass of Hashable
-    public func hash(into hasher: inout Hasher)   {
-        
-        let divX = self.x / Point3D.Epsilon
-        let myX = Int(round(divX))
-        
-        let divY = self.y / Point3D.Epsilon
-        let myY = Int(round(divY))
-        
-        let divZ = self.z / Point3D.Epsilon
-        let myZ = Int(round(divZ))
-        
-        hasher.combine(myX)
-        hasher.combine(myY)
-        hasher.combine(myZ)
-        
     }
 
 }

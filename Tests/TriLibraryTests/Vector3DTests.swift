@@ -317,7 +317,7 @@ class Vector3DTests: XCTestCase {
         let thar = Vector3D(i: 1.0, j: 0.0, k: 0.0)
         let homesickAngel = Vector3D(i: 0.0, j: 0.0, k: 1.0)
         
-        let trial = thar.twistAbout(axisDir: homesickAngel, angleRad: Double.pi)
+        let trial = Vector3D.twistAbout(arrow: thar, axisDir: homesickAngel, angleRad: Double.pi)
         
         let target = Vector3D(i: -1.0, j: 0.0, k: 0.0)
         

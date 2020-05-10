@@ -34,7 +34,7 @@ class Point3DTests: XCTestCase {
         
         let jump = Vector3D(i: 1.5, j: 1.5, k: 1.5)
         
-        let tip = local.offset(jump: jump)
+        let tip = Point3D.offset(pip: local, jump: jump)
         
         XCTAssert(tip.x == 0.5)
         XCTAssert(tip.y == 3.5)

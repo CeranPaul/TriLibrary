@@ -6,7 +6,7 @@
 //  Copyright © 2018 Ceran Digital Media. See LICENSE.md
 //
 
-import Quartz
+import Foundation
 import simd
 
 // What's the right way to check for equivalence?  End points and control points?
@@ -120,10 +120,10 @@ open class Cubic: PenCurve   {
         
             // Always convert to Bezier form for editing
         var jump = slopeA * 0.3333
-        self.controlA = ptAlpha.offset(jump: jump)
+        self.controlA = Point3D.offset(pip: ptAlpha, jump: jump)
         
         jump = slopeB * -0.3333
-        self.controlB = ptOmega.offset(jump: jump)
+        self.controlB = Point3D.offset(pip: ptOmega, jump: jump)
         
         self.usage = PenTypes.Ordinary
         
@@ -248,11 +248,11 @@ open class Cubic: PenCurve   {
         // Add control points for editing
         let slopeA = self.tangentAt(t: 0.0)
         var jump = slopeA * 0.3333
-        self.controlA = ptAlpha.offset(jump: jump)
+        self.controlA = Point3D.offset(pip: ptAlpha, jump: jump)
         
         let slopeB = self.tangentAt(t: 1.0)
         jump = slopeB * -0.3333
-        self.controlB = ptOmega.offset(jump: jump)
+        self.controlB = Point3D.offset(pip: ptOmega, jump: jump)
         
         parameterizeBezier()   // Generate coefficients to be recorded
         
@@ -679,11 +679,11 @@ open class Cubic: PenCurve   {
     /// - See: 'testTransform' under CubicTests
     public func transform(xirtam: Transform) -> PenCurve   {
         
-        let tAlpha = self.ptAlpha.transform(xirtam: xirtam)
-        let tOmega = self.ptOmega.transform(xirtam: xirtam)
+        let tAlpha = Point3D.transform(pip: self.ptAlpha, xirtam: xirtam)
+        let tOmega = Point3D.transform(pip: self.ptOmega, xirtam: xirtam)
         
-        let tControlA = self.controlA!.transform(xirtam: xirtam)
-        let tControlB = self.controlB!.transform(xirtam: xirtam)
+        let tControlA = Point3D.transform(pip: self.controlA!, xirtam: xirtam)
+        let tControlB = Point3D.transform(pip: self.controlB!, xirtam: xirtam)
         
         let fresh = Cubic(ptA: tAlpha, controlA: tControlA, controlB: tControlB, ptB: tOmega)
         fresh.setIntent(purpose: self.usage)   // Copy setting instead of having the default

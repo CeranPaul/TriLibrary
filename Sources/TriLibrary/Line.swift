@@ -96,7 +96,7 @@ public struct Line: Equatable {
         let bridge = Vector3D.built(from: self.origin, towards: away)
         let along = Vector3D.dotProduct(lhs: bridge, rhs: self.direction)
         let alongVector = self.direction * along
-        let onLine = self.origin.offset(jump: alongVector)
+        let onLine = Point3D.offset(pip: self.origin, jump: alongVector)
         
         return onLine
     }
@@ -221,7 +221,7 @@ public struct Line: Equatable {
         
         let alongB = straightB.getDirection() * lengthB;
         
-        return straightB.getOrigin().offset(jump: alongB);
+        return Point3D.offset(pip: straightB.getOrigin(), jump: alongB);
     }
     
     /// Generate the perpendicular bisector for the LineSeg between two points

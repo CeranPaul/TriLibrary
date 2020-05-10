@@ -60,12 +60,12 @@ class CubicTests: XCTestCase {
         let alpha = Point3D(x: 2.3, y: 1.5, z: 0.7)
         let alSlope = Vector3D(i: 0.866, j: 0.5, k: 0.0)
         
-        let control1 = alpha.offset(jump: alSlope)
+        let control1 = Point3D.offset(pip: alpha, jump: alSlope)
         
         let beta = Point3D(x: 3.1, y: 1.6, z: 0.7)
         let betSlope = Vector3D(i: 0.866, j: -0.5, k: 0.0)
         let bReverse = betSlope.reverse()
-        let control2 = beta.offset(jump: bReverse)
+        let control2 = Point3D.offset(pip: beta, jump: bReverse)
         
         let bump = Cubic(ptA: alpha, controlA: control1, controlB: control2, ptB: beta)
         
@@ -88,12 +88,12 @@ class CubicTests: XCTestCase {
         let alpha = Point3D(x: 2.3, y: 1.5, z: 0.7)
         let alSlope = Vector3D(i: 0.866, j: 0.5, k: 0.0)
         
-        let control1 = alpha.offset(jump: alSlope)
+        let control1 = Point3D.offset(pip: alpha, jump: alSlope)
         
         let beta = Point3D(x: 3.1, y: 1.6, z: 0.7)
         let betSlope = Vector3D(i: 0.866, j: -0.5, k: 0.0)
         let bReverse = betSlope.reverse()
-        let control2 = beta.offset(jump: bReverse)
+        let control2 = Point3D.offset(pip: beta, jump: bReverse)
         
         let bump = Cubic(ptA: alpha, controlA: control1, controlB: control2, ptB: beta)
         
@@ -140,12 +140,12 @@ class CubicTests: XCTestCase {
         let alpha = Point3D(x: 2.3, y: 1.5, z: 0.7)
         let alSlope = Vector3D(i: 0.866, j: 0.5, k: 0.0)
         
-        let control1 = alpha.offset(jump: alSlope)
+        let control1 = Point3D.offset(pip: alpha, jump: alSlope)
         
         let beta = Point3D(x: 3.1, y: 1.6, z: 0.7)
         let betSlope = Vector3D(i: 0.866, j: -0.5, k: 0.0)
         let bReverse = betSlope.reverse()
-        let control2 = beta.offset(jump: bReverse)
+        let control2 = Point3D.offset(pip: beta, jump: bReverse)
         
         let bump = Cubic(ptA: alpha, controlA: control1, controlB: control2, ptB: beta)
         
@@ -181,13 +181,13 @@ class CubicTests: XCTestCase {
         let fling = Transform(rotationAxis: Axis.z, angleRad: Double.pi / 4.0)
         
         let alpha = cup!.getOneEnd()
-        let freshAlpha = alpha.transform(xirtam: fling)
+        let freshAlpha = Point3D.transform(pip: alpha, xirtam: fling)
         
         let omega = cup!.getOtherEnd()
-        let freshOmega = omega.transform(xirtam: fling)
+        let freshOmega = Point3D.transform(pip: omega, xirtam: fling)
         
         let mid = cup!.pointAt(t: 0.35)
-        let freshMid = mid.transform(xirtam: fling)
+        let freshMid = Point3D.transform(pip: mid, xirtam: fling)
         
         let bulge = cup!.transform(xirtam: fling) as! Cubic   // Because the return value is a PenCurve
         

@@ -6,7 +6,7 @@
 //  Copyright © 2018 Ceran Digital Media. See LICENSE.md
 //
 
-import Quartz
+import Foundation
 
 /// The general framework for a curve.  Not limited to 2D.
 public protocol PenCurve   {

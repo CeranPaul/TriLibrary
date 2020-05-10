@@ -87,7 +87,7 @@ class TransformPlusTests: XCTestCase {
         
         let tform = Transform(deltaX: -2.0, deltaY: 3.0, deltaZ: 1.5)
         
-        let trial = source.transform(xirtam: tform)
+        let trial = Point3D.transform(pip: source, xirtam: tform)
         
         XCTAssertEqual(trial.x, -1.0)
         XCTAssertEqual(trial.y, 8.0)
@@ -102,7 +102,7 @@ class TransformPlusTests: XCTestCase {
         
         let shrink = Transform(scaleX: 0.8, scaleY: -0.5, scaleZ: 1.4)
         
-        let trial = source.transform(xirtam: shrink)
+        let trial = Point3D.transform(pip: source, xirtam: shrink)
         
         XCTAssertEqual(trial.x, 4.0)
         XCTAssertEqual(trial.y, 2.5)
@@ -112,6 +112,40 @@ class TransformPlusTests: XCTestCase {
 
     
     func testRollYourOwn() {
+        
+        let shortAxis = Vector3D(i: 0.75, j: 0.0, k: 0.0)
+        let longAxis = Vector3D(i: 0.0, j: 1.2, k: 0.0)
+        let oversized = Vector3D(i: 0.0, j: 0.0, k: 26.5)
+        let dupe = Vector3D(i: 0.0, j: 1.0, k: 0.0)
+        
+        let justRightX = Vector3D(i: 1.0, j: 0.0, k: 0.0)
+        let justRightY = Vector3D(i: 0.0, j: 1.0, k: 0.0)
+        let justRightZ = Vector3D(i: 0.0, j: 0.0, k: 1.0)
+        
+        XCTAssertThrowsError( try Transform(localX: justRightX, localY: longAxis, localZ: justRightZ) )
+        
+        XCTAssertThrowsError( try Transform(localX: shortAxis, localY: justRightY, localZ: justRightZ) )
+
+        XCTAssertThrowsError( try Transform(localX: justRightX, localY: justRightY, localZ: oversized) )
+
+        XCTAssertNoThrow( try Transform(localX: justRightX, localY: justRightY, localZ: justRightZ) )
+
+        
+           // Check that one guard statement generates the proper error
+        do {
+                        
+            _ = try Transform(localX: dupe, localY: justRightY, localZ: justRightZ)
+            
+        }  catch is NonOrthogonalCSYSError {
+            
+            XCTAssert(true)
+            
+        }  catch  {   // I don't see how you avoid writing this code, and having it be untested
+        
+            XCTAssert(false)
+        }
+        
+
         
         let fodder = Point3D(x: 2.0, y: 0.0, z: 0.0)
         let rowA = RowMtx4(ptIn: fodder)
@@ -125,7 +159,7 @@ class TransformPlusTests: XCTestCase {
         let freshYAxis = Vector3D(i: -halfSq2rt, j: halfSq2rt, k: 0.0)
         let freshZAxis = Vector3D(i: 0.0, j: 0.0, k: 1.0)
         
-        let hardRot = Transform(localX: freshXAxis, localY: freshYAxis, localZ: freshZAxis)
+        let hardRot = try! Transform(localX: freshXAxis, localY: freshYAxis, localZ: freshZAxis)
         
         let multRes = rowA * hardRot
         
@@ -143,7 +177,7 @@ class TransformPlusTests: XCTestCase {
         
         let fred = CoordinateSystem()
         
-        let pebbles = Transform.genToGlobal(csys: fred)
+        let pebbles = try! Transform.genToGlobal(csys: fred)
         
         let pristine = Transform()
         
@@ -153,7 +187,7 @@ class TransformPlusTests: XCTestCase {
         
         let wilma = CoordinateSystem.relocate(startingCSYS: fred, betterOrigin: barney)
         
-        let bambam = Transform.genToGlobal(csys: wilma)
+        let bambam = try! Transform.genToGlobal(csys: wilma)
         
         XCTAssertFalse(bambam == pristine)
         
@@ -178,17 +212,17 @@ class TransformPlusTests: XCTestCase {
         XCTAssert(betty.r == -2.0)
         XCTAssert(betty.s == -3.0)
         
-        let dino = Transform.genToGlobal(csys: wilma)
+        let dino = try! Transform.genToGlobal(csys: wilma)
         
         
         let local1 = Point3D(x: 5.0, y: 4.0, z: 3.0)
-        let global1 = local1.transform(xirtam: dino)
+        let global1 = Point3D.transform(pip: local1, xirtam: dino)
         
         XCTAssert(global1.x == 6.0)
         XCTAssert(global1.y == 6.0)
         XCTAssert(global1.z == 6.0)
         
-        let local2 = global1.transform(xirtam: betty)
+        let local2 = Point3D.transform(pip: global1, xirtam: betty)
         
         XCTAssert(local2 == local1)
         

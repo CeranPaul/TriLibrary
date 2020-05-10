@@ -44,24 +44,24 @@ class CoordinateSystemTests: XCTestCase {
         var axis2 = Vector3D(i: -sqrt22, j: sqrt22, k: 0.0)
         var axis3 = Vector3D(i: 0.0, j: 0.0, k: 1.0)
         
-        XCTAssert(CoordinateSystem.isMutOrtho(uno: axis1, dos: axis2, tres: axis3))
+        XCTAssert(try CoordinateSystem.isMutOrtho(uno: axis1, dos: axis2, tres: axis3))
         
         
         axis1 = Vector3D(i: 1.0, j: 0.0, k: 0.0)
 
-        XCTAssertFalse(CoordinateSystem.isMutOrtho(uno: axis1, dos: axis2, tres: axis3))
+        XCTAssertFalse(try CoordinateSystem.isMutOrtho(uno: axis1, dos: axis2, tres: axis3))
         
         
         axis1 = Vector3D(i: sqrt22, j: sqrt22, k: 0.0)
         axis2 = Vector3D(i: 0.0, j: -1.0, k: 0.0)
 
-        XCTAssertFalse(CoordinateSystem.isMutOrtho(uno: axis1, dos: axis2, tres: axis3))
+        XCTAssertFalse(try CoordinateSystem.isMutOrtho(uno: axis1, dos: axis2, tres: axis3))
         
         
         axis2 = Vector3D(i: -sqrt22, j: sqrt22, k: 0.0)
         axis3 = Vector3D(i: sqrt(3.0) / 2.0, j: 0.5, k: 0.0)
         
-        XCTAssertFalse(CoordinateSystem.isMutOrtho(uno: axis1, dos: axis2, tres: axis3))
+        XCTAssertFalse(try CoordinateSystem.isMutOrtho(uno: axis1, dos: axis2, tres: axis3))
         
     }
     
