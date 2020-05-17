@@ -39,8 +39,8 @@ class LineSegTests: XCTestCase {
         
         XCTAssert(stroke.usage == PenTypes.Ordinary)
         
-        stroke.setIntent(purpose: PenTypes.Overflow)
-        XCTAssert(stroke.usage == PenTypes.Overflow)
+        stroke.setIntent(purpose: PenTypes.Selected)
+        XCTAssert(stroke.usage == PenTypes.Selected)
         
     }
     

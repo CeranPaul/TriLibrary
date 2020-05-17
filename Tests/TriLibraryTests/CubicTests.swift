@@ -22,7 +22,7 @@ class CubicTests: XCTestCase {
         let beta = Point3D(x: 3.1, y: 1.6, z: 0.7)
         let betSlope = Vector3D(i: 0.866, j: -0.5, k: 0.0)
         
-        cup = Cubic(ptA: alpha, slopeA: alSlope, ptB: beta, slopeB: betSlope)
+        cup = try! Cubic(ptA: alpha, slopeA: alSlope, ptB: beta, slopeB: betSlope)
         
     }
     
@@ -39,7 +39,7 @@ class CubicTests: XCTestCase {
         let beta = Point3D(x: 3.1, y: 1.6, z: 0.7)
         let betSlope = Vector3D(i: 0.866, j: -0.5, k: 0.0)
         
-        let bump = Cubic(ptA: alpha, slopeA: alSlope, ptB: beta, slopeB: betSlope)
+        let bump = try! Cubic(ptA: alpha, slopeA: alSlope, ptB: beta, slopeB: betSlope)
         
         let oneTrial = bump.pointAt(t: 0.0)
         
@@ -52,6 +52,11 @@ class CubicTests: XCTestCase {
         let flag2 = Point3D.dist(pt1: otherTrial, pt2: beta) < (Point3D.Epsilon / 3.0)
         
         XCTAssert(flag2)
+        
+        let badSlope = Vector3D(i: 0.0, j: 0.0, k: 0.0)
+        
+        XCTAssertThrowsError(try Cubic(ptA: alpha, slopeA: badSlope, ptB: beta, slopeB: betSlope))
+        XCTAssertThrowsError(try Cubic(ptA: alpha, slopeA: alSlope, ptB: beta, slopeB: badSlope))
 
     }
 
@@ -67,7 +72,7 @@ class CubicTests: XCTestCase {
         let bReverse = betSlope.reverse()
         let control2 = Point3D.offset(pip: beta, jump: bReverse)
         
-        let bump = Cubic(ptA: alpha, controlA: control1, controlB: control2, ptB: beta)
+        let bump = try! Cubic(ptA: alpha, controlA: control1, controlB: control2, ptB: beta)
         
         let oneTrial = bump.pointAt(t: 0.0)
         
@@ -95,7 +100,7 @@ class CubicTests: XCTestCase {
         let bReverse = betSlope.reverse()
         let control2 = Point3D.offset(pip: beta, jump: bReverse)
         
-        let bump = Cubic(ptA: alpha, controlA: control1, controlB: control2, ptB: beta)
+        let bump = try! Cubic(ptA: alpha, controlA: control1, controlB: control2, ptB: beta)
         
         
         let retAlpha = bump.getOneEnd()
@@ -110,8 +115,8 @@ class CubicTests: XCTestCase {
         
         XCTAssert(cup!.usage == PenTypes.Ordinary)
         
-        cup!.setIntent(purpose: PenTypes.Overflow)
-        XCTAssert(cup!.usage == PenTypes.Overflow)
+        cup!.setIntent(purpose: PenTypes.Selected)
+        XCTAssert(cup!.usage == PenTypes.Selected)
         
     }
     
@@ -124,7 +129,7 @@ class CubicTests: XCTestCase {
         let beta = Point3D(x: 3.1, y: 1.6, z: 0.7)
         let betSlope = Vector3D(i: 0.866, j: -0.5, k: 0.0)
         
-        let bump = Cubic(ptA: alpha, slopeA: alSlope, ptB: beta, slopeB: betSlope)
+        let bump = try! Cubic(ptA: alpha, slopeA: alSlope, ptB: beta, slopeB: betSlope)
         
         let sumX = bump.ax + bump.bx + bump.cx + bump.dx
         let sumY = bump.ay + bump.by + bump.cy + bump.dy
@@ -147,7 +152,7 @@ class CubicTests: XCTestCase {
         let bReverse = betSlope.reverse()
         let control2 = Point3D.offset(pip: beta, jump: bReverse)
         
-        let bump = Cubic(ptA: alpha, controlA: control1, controlB: control2, ptB: beta)
+        let bump = try! Cubic(ptA: alpha, controlA: control1, controlB: control2, ptB: beta)
         
         let sumX = bump.ax + bump.bx + bump.cx + bump.dx
         let sumY = bump.ay + bump.by + bump.cy + bump.dy
@@ -168,7 +173,7 @@ class CubicTests: XCTestCase {
         
         let beta = Point3D(x: -2.7, y: -3.4, z: 0.7)
         
-        let bump = Cubic(ptA: alpha, controlA: control1, controlB: control2, ptB: beta)
+        let bump = try! Cubic(ptA: alpha, controlA: control1, controlB: control2, ptB: beta)
         
         
         let box = bump.getExtent()
@@ -209,7 +214,7 @@ class CubicTests: XCTestCase {
         let betSlope = Vector3D(i: 0.866, j: -0.5, k: 0.0)
         
         /// Reversed the parameters
-        let scoop = Cubic(ptA: beta, slopeA: betSlope.reverse(), ptB: alpha, slopeB: alSlope.reverse())
+        let scoop = try! Cubic(ptA: beta, slopeA: betSlope.reverse(), ptB: alpha, slopeB: alSlope.reverse())
         
         let midA = scoop.pointAt(t: 0.10)
         let midB = scoop.pointAt(t: 0.75)
@@ -283,7 +288,7 @@ class CubicTests: XCTestCase {
         let ptC = Point3D(x: 2.70, y: 2.30, z: 0.0)
         let ptD = Point3D(x: 3.50, y: 2.05, z: 0.0)
         
-        let target = Cubic(alpha: ptA, beta: ptB, betaFraction: 0.35, gamma: ptC, gammaFraction: 0.70, delta: ptD)
+        let target = try! Cubic(alpha: ptA, beta: ptB, betaFraction: 0.35, gamma: ptC, gammaFraction: 0.70, delta: ptD)
         
         let ptE = Point3D(x: 2.50, y: 1.30, z: 0.0)
         let ptF = Point3D(x: 3.35, y: 2.20, z: 0.0)

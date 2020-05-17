@@ -81,6 +81,17 @@ public struct Plane   {
     }
     
     
+    /// A wrapper to conform with protocol "Surfs"
+    /// - Parameters:
+    ///   - pip:  Point of interest
+    /// - Returns: Simple flag
+    public func isOn(pip: Point3D) -> Bool   {
+        
+        let flag = Plane.isCoincident(flat: self, pip: pip)
+        return flag
+    }
+    
+    
     /// Build orthogonal vectors from the origin of the plane to the point
     /// - Parameters:
     ///   - pip:  Point of interest
@@ -98,60 +109,6 @@ public struct Plane   {
         return (inPlane, perp)
     }
     
-    
-    /// A wrapper to conform with protocol "Surfs"
-    public func isOn(pip: Point3D) -> Bool   {
-        
-        let flag = Plane.isCoincident(flat: self, pip: pip)
-        return flag
-    }
-    
-    
-    /// Flip points to the opposite side of the plane
-    /// - Parameters:
-    ///   - flat:  Mirroring plane
-    ///   - pip:  Point to be flipped
-    /// - Returns: New point
-    public static func mirror(flat: Plane, pip: Point3D) -> Point3D   {
-        
-        let comps = Plane.resolveRelativeVec(flat: flat, pip: pip)
-        
-        let jump = comps.perp * -2.0
-        let fairest = Point3D.offset(pip: pip, jump: jump)
-        
-        return fairest
-    }
-    
-    
-    /// Flip line segment to the opposite side of the plane
-    /// - Parameters:
-    ///   - flat:  Mirroring plane
-    ///   - wire:  LineSeg to be flipped
-    /// - Returns: New LineSeg
-    public static func mirror(flat: Plane, wire: LineSeg) -> LineSeg   {
-        
-        var pip: Point3D = wire.getOneEnd()
-        var comps = Plane.resolveRelativeVec(flat: flat, pip: pip)
-        
-        var jump = comps.perp * -2.0
-        let fairest1 = Point3D.offset(pip: pip, jump: jump)
-        
-        pip = wire.getOtherEnd()
-        comps = Plane.resolveRelativeVec(flat: flat, pip: pip)
-        
-        jump = comps.perp * -2.0
-        let fairest2 = Point3D.offset(pip: pip, jump: jump)
-        
-        let rail = try! LineSeg(end1: fairest1, end2: fairest2)
-        // TODO: What can be done to get rid of this forced resolution?
-        
-        return rail
-    }
-    
-    
-    // A similar function for Facets is in class Mesh.
-    
-
     
     /// Check to see that the line direction is perpendicular to the normal
     /// - Parameters:
@@ -221,6 +178,52 @@ public struct Plane   {
     }
     
     
+    /// Flip points to the opposite side of the plane
+    /// - Parameters:
+    ///   - flat:  Mirroring plane
+    ///   - pip:  Point to be flipped
+    /// - Returns: New point
+    public static func mirror(flat: Plane, pip: Point3D) -> Point3D   {
+        
+        /// Vector components from the Plane origin
+        let comps = Plane.resolveRelativeVec(flat: flat, pip: pip)
+        
+        /// Vector to apply to the original point
+        let jump = comps.perp * -2.0
+        
+        ///New point from mirroring
+        let fairest = Point3D.offset(pip: pip, jump: jump)
+        
+        return fairest
+    }
+    
+    
+    /// Flip line segment to the opposite side of the plane
+    /// - Parameters:
+    ///   - flat:  Mirroring plane
+    ///   - wire:  LineSeg to be flipped
+    /// - Returns: New LineSeg
+    public static func mirror(flat: Plane, wire: LineSeg) -> LineSeg   {
+        
+        /// Point to be worked on
+        var pip: Point3D = wire.getOneEnd()
+        
+        ///New point from mirroring
+        let fairest1 = Plane.mirror(flat: flat, pip: pip)
+        
+        pip = wire.getOtherEnd()
+        
+        ///New point from mirroring
+        let fairest2 = Plane.mirror(flat: flat, pip: pip)
+        
+        let mirroredLineSeg = try! LineSeg(end1: fairest1, end2: fairest2)
+        // The forced unwrapping should be no risk because it uses points from a LineSeg that has already checked out.
+        
+        return mirroredLineSeg
+    }
+    
+
+    
     /// Construct a parallel plane offset some distance.
     /// - Parameters:
     ///   - base:  The reference plane
@@ -269,11 +272,13 @@ public struct Plane   {
         return sparkle
     }
     
+    
     /// Generate a point by intersecting a line and a plane
     /// - Parameters:
     ///   - enil:  Line of interest
     ///   - enalp:  Flat surface to hit
     /// - Throws: ParallelError if the input Line is parallel to the plane
+    /// - See: 'testIntersectLinePlane' under PlaneTests
     public static func intersectLinePlane(enil: Line, enalp: Plane) throws -> Point3D {
         
         // Bail if the line is parallel to the plane
@@ -307,17 +312,20 @@ public struct Plane   {
         return Point3D.offset(pip: projectedLineOrigin, jump: inPlaneOffset)
     }
     
+    
     /// Construct a line by intersecting two planes
     /// - Parameters:
     ///   - flatA:  First plane
     ///   - flatB:  Second plane
     /// - Throws: ParallelPlanesError if the inputs are parallel
     /// - Throws: CoincidentPlanesError if the inputs are coincident
+    /// - See: 'testIntersectPlanes' under PlaneTests
     public static func intersectPlanes(flatA: Plane, flatB: Plane) throws -> Line   {
         
-        guard !Plane.isParallel(lhs: flatA, rhs: flatB)  else  { throw ParallelPlanesError(enalpA: flatA) }
-        
+           // This goes first to provide a better error message.
         guard !Plane.isCoincident(lhs: flatA, rhs: flatB)  else  { throw CoincidentPlanesError(enalpA: flatA) }
+        
+        guard !Plane.isParallel(lhs: flatA, rhs: flatB)  else  { throw ParallelPlanesError(enalpA: flatA) }
         
         
         /// Direction of the intersection line

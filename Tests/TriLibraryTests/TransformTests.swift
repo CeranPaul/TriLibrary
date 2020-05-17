@@ -9,7 +9,7 @@
 import XCTest
 @testable import TriLibrary
 
-class TransformPlusTests: XCTestCase {
+class TransformTests: XCTestCase {
 
     
     func testIdentity()   {

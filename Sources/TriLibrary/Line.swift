@@ -34,6 +34,9 @@ public struct Line: Equatable {
         self.direction = arrow
     }
     
+    // TODO: An initializer from two points?
+    // TODO: An initializer from a LineSeg?
+    
     /// Simple getter for the origin
     public func getOrigin() -> Point3D  {
         

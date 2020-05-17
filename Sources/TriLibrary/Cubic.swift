@@ -17,10 +17,11 @@ import simd
 // TODO: Clip from either end and re-parameterize.  But what about 'undo'?  Careful with a lack of proportionality
 
 
-/// Curve defined by polynomials for each coordinate direction
+/// Curve defined by polynomials for each coordinate direction.
+/// Parameter must fall within the range of 0.0 to 1.0.
+/// Bezier form is used to store the curve definition.
 open class Cubic: PenCurve   {    
-    
-    
+        
     var ax: Double
     var bx: Double
     var cx: Double
@@ -32,7 +33,7 @@ open class Cubic: PenCurve   {
     var dy: Double
     
     var az: Double   // For a curve in the XY plane, these can be ignored, or set to zero
-    var bz: Double
+    var bz: Double   // Sounds like a good check to run - in all three axes.
     var cz: Double
     var dz: Double
     
@@ -48,7 +49,9 @@ open class Cubic: PenCurve   {
     /// The enum that hints at the meaning of the curve
     open var usage: PenTypes
     
-    open var parameterRange: ClosedRange<Double>   // Never used
+    /// Limited to be bettween 0.0 and 1.0
+    public var parameterRange: ClosedRange<Double>
+    
     
     
     
@@ -73,7 +76,7 @@ open class Cubic: PenCurve   {
         ptAlpha = Point3D(x: dx, y: dy, z: dz)   // Create the beginning point from parameters
         
         
-        let sumX = self.ax + self.bx + self.cx + self.dx   // Create the end point from parameters
+        let sumX = self.ax + self.bx + self.cx + self.dx   // Create the end point from an assumed parameter value of 1.0
         let sumY = self.ay + self.by + self.cy + self.dy
         let sumZ = self.az + self.bz + self.cz + self.dz
         
@@ -87,19 +90,24 @@ open class Cubic: PenCurve   {
     }
     
     
-    /// Build from two points and two slopes
-    /// This code always produces the Bezier form for ease of screen editing
+    /// Build from two points and two slopes.
+    /// This code always produces the Bezier form for ease of screen editing.
     /// The assignment statements come from an algebraic manipulation of the equations
-    /// in the Wikipedia article on Cubic Hermite spline
+    /// in the Wikipedia article on Cubic Hermite spline.
     /// - Parameters:
     ///   - ptA: First end point
     ///   - slopeA: Slope that goes with the first end point
     ///   - ptB: Other end point
     ///   - slopeB: Slope that goes with the second end point
     /// There are checks here for input points that should be added!
-    /// - See: 'testSumsHermite' under CubicTests
-    public init(ptA: Point3D, slopeA: Vector3D, ptB: Point3D, slopeB: Vector3D)   {
+    /// - See: 'testHermite' and 'testSumsHermite' under CubicTests
+    public init(ptA: Point3D, slopeA: Vector3D, ptB: Point3D, slopeB: Vector3D) throws   {
         
+        guard !slopeA.isZero() else { throw ZeroVectorError(dir: slopeA) }
+        guard !slopeB.isZero() else { throw ZeroVectorError(dir: slopeB) }
+        
+        guard !(ptA == ptB) else { throw CoincidentPointsError(dupePt: ptA) }
+
         ptAlpha = ptA
         ptOmega = ptB
         
@@ -118,18 +126,9 @@ open class Cubic: PenCurve   {
         self.cz = slopeA.k
         self.dz = ptA.z
         
-            // Always convert to Bezier form for editing
-        var jump = slopeA * 0.3333
-        self.controlA = Point3D.offset(pip: ptAlpha, jump: jump)
-        
-        jump = slopeB * -0.3333
-        self.controlB = Point3D.offset(pip: ptOmega, jump: jump)
-        
         self.usage = PenTypes.Ordinary
         
         self.parameterRange = ClosedRange<Double>(uncheckedBounds: (lower: 0.0, upper: 1.0))
-        
-        parameterizeBezier()   // Generate coefficients to be recorded
         
     }
     
@@ -144,23 +143,12 @@ open class Cubic: PenCurve   {
     ///   - controlB: Control point for second end
     /// There are checks here for input points that should be added!
     /// - See: 'testSumsBezier' under CubicTests
-    public init(ptA: Point3D, controlA: Point3D, controlB: Point3D, ptB: Point3D)   {
+    public init(ptA: Point3D, controlA: Point3D, controlB: Point3D, ptB: Point3D) throws   {
         
-           // Dummy initial values
-        self.ax = 0.0
-        self.bx = 0.0
-        self.cx = 0.0
-        self.dx = 0.0
+        let pool = [ptA, controlA, controlB, ptB]
+        guard Point3D.isUniquePool(flock: pool) else { throw CoincidentPointsError(dupePt: ptA)}
         
-        self.ay = 0.0
-        self.by = 0.0
-        self.cy = 0.0
-        self.dy = 0.0
-        
-        self.az = 0.0
-        self.bz = 0.0
-        self.cz = 0.0
-        self.dz = 0.0
+        // TODO: Then add tests to see that the guard statements are doing their job
         
         self.ptAlpha = ptA
         self.ptOmega = ptB
@@ -169,11 +157,24 @@ open class Cubic: PenCurve   {
         self.controlB = controlB
         
         
+        self.ax = 3.0 * self.controlA!.x - self.ptAlpha.x - 3.0 * self.controlB!.x + self.ptOmega.x
+        self.bx = 3.0 * self.ptAlpha.x - 6.0 * self.controlA!.x + 3.0 * self.controlB!.x
+        self.cx = 3.0 * self.controlA!.x - 3.0 * self.ptAlpha.x
+        self.dx = self.ptAlpha.x
+        
+        self.ay = 3.0 * self.controlA!.y - self.ptAlpha.y - 3.0 * self.controlB!.y + self.ptOmega.y
+        self.by = 3.0 * self.ptAlpha.y - 6.0 * self.controlA!.y + 3.0 * self.controlB!.y
+        self.cy = 3.0 * self.controlA!.y - 3.0 * self.ptAlpha.y
+        self.dy = self.ptAlpha.y
+        
+        self.az = 3.0 * self.controlA!.z - self.ptAlpha.z - 3.0 * self.controlB!.z + self.ptOmega.z
+        self.bz = 3.0 * self.ptAlpha.z - 6.0 * self.controlA!.z + 3.0 * self.controlB!.z
+        self.cz = 3.0 * self.controlA!.z - 3.0 * self.ptAlpha.z
+        self.dz = self.ptAlpha.z
+        
         self.usage = PenTypes.Ordinary
         
         self.parameterRange = ClosedRange<Double>(uncheckedBounds: (lower: 0.0, upper: 1.0))
-        
-        parameterizeBezier()   // Generate coefficients to be recorded
         
     }
     
@@ -185,7 +186,17 @@ open class Cubic: PenCurve   {
     ///   - gamma: Third point
     ///   - gammaFraction: Portion along the curve for point gamma
     ///   - delta: Last point
-    public init(alpha: Point3D, beta: Point3D, betaFraction: Double, gamma: Point3D, gammaFraction: Double, delta: Point3D)   {
+    public init(alpha: Point3D, beta: Point3D, betaFraction: Double, gamma: Point3D, gammaFraction: Double, delta: Point3D) throws  {
+        
+        self.parameterRange = ClosedRange<Double>(uncheckedBounds: (lower: 0.0, upper: 1.0))
+        
+        guard self.parameterRange.contains(betaFraction) else { throw ParameterRangeError(parA: betaFraction) }
+        guard self.parameterRange.contains(gammaFraction) else { throw ParameterRangeError(parA: gammaFraction) }
+        
+        let pool = [alpha, beta, gamma, delta]
+        guard Point3D.isUniquePool(flock: pool) else { throw CoincidentPointsError(dupePt: alpha)}
+        
+        // TODO: Then add tests to see that the guard statements are doing their job
         
         self.ptAlpha = alpha
         self.ptOmega = delta
@@ -225,7 +236,7 @@ open class Cubic: PenCurve   {
         let coeffZ = nvers * rowZ
         
         
-        // Set the curve coefficients.  Do these ever get used?
+        // Set the curve coefficients
         self.ax = coeffX[0]
         self.bx = coeffX[1]
         self.cx = coeffX[2]
@@ -241,44 +252,7 @@ open class Cubic: PenCurve   {
         
         
         self.usage = PenTypes.Ordinary
-        
-        self.parameterRange = ClosedRange<Double>(uncheckedBounds: (lower: 0.0, upper: 1.0))
-        
-        
-        // Add control points for editing
-        let slopeA = self.tangentAt(t: 0.0)
-        var jump = slopeA * 0.3333
-        self.controlA = Point3D.offset(pip: ptAlpha, jump: jump)
-        
-        let slopeB = self.tangentAt(t: 1.0)
-        jump = slopeB * -0.3333
-        self.controlB = Point3D.offset(pip: ptOmega, jump: jump)
-        
-        parameterizeBezier()   // Generate coefficients to be recorded
-        
-    }
-    
-    /// Develop the coefficients from the points.
-    /// This is done as a separate routine so that modifications will be consistent with original construction.
-    /// Used by several initializers
-    /// Should this be 'private' access level?
-    func parameterizeBezier() -> Void {
-        
-        self.ax = 3.0 * self.controlA!.x - self.ptAlpha.x - 3.0 * self.controlB!.x + self.ptOmega.x
-        self.bx = 3.0 * self.ptAlpha.x - 6.0 * self.controlA!.x + 3.0 * self.controlB!.x
-        self.cx = 3.0 * self.controlA!.x - 3.0 * self.ptAlpha.x
-        self.dx = self.ptAlpha.x
-        
-        self.ay = 3.0 * self.controlA!.y - self.ptAlpha.y - 3.0 * self.controlB!.y + self.ptOmega.y
-        self.by = 3.0 * self.ptAlpha.y - 6.0 * self.controlA!.y + 3.0 * self.controlB!.y
-        self.cy = 3.0 * self.controlA!.y - 3.0 * self.ptAlpha.y
-        self.dy = self.ptAlpha.y
-        
-        self.az = 3.0 * self.controlA!.z - self.ptAlpha.z - 3.0 * self.controlB!.z + self.ptOmega.z
-        self.bz = 3.0 * self.ptAlpha.z - 6.0 * self.controlA!.z + 3.0 * self.controlB!.z
-        self.cz = 3.0 * self.controlA!.z - 3.0 * self.ptAlpha.z
-        self.dz = self.ptAlpha.z
-        
+                
     }
     
     
@@ -304,6 +278,7 @@ open class Cubic: PenCurve   {
         return ptOmega
     }
     
+    /// Don't use this!
     /// Flip the order of the end points (and control points).  Used to align members of a Loop.
     public func reverse() -> Void  {
         
@@ -315,7 +290,7 @@ open class Cubic: PenCurve   {
         self.controlA! = controlB!
         controlB! = bubble
         
-        parameterizeBezier()
+//        parameterizeBezier()
     }
     
     
@@ -386,48 +361,38 @@ open class Cubic: PenCurve   {
     
     /// Calculate the proper surrounding box
     /// Increase the number of intermediate points as necessary
+    /// This same techniques could be used for other parametric curves
     public func getExtent() -> OrthoVol   {
         
+        /// Number of check points along the curve
         let pieces = 15
+        
         let step = 1.0 / Double(pieces)
         let limit = pieces - 1
         
-        var bucket = [Double]()
-        
+        var bucketX = [Double]()
+        var bucketY = [Double]()
+        var bucketZ = [Double]()
+
         for u in 1...limit   {
             let pip = self.pointAt(t: Double(u) * step)
-            bucket.append(pip.x)
+            bucketX.append(pip.x)
+            bucketY.append(pip.y)
+            bucketZ.append(pip.z)
         }
         
-        bucket.append(ptOmega.x)
+        bucketX.append(ptOmega.x)
+        bucketY.append(ptOmega.y)
+        bucketZ.append(ptOmega.z)
+
+        var maxX = bucketX.reduce(ptAlpha.x, max)
+        var minX = bucketX.reduce(ptAlpha.x, min)
+                
+        var maxY = bucketY.reduce(ptAlpha.y, max)
+        var minY = bucketY.reduce(ptAlpha.y, min)
         
-        let maxX = bucket.reduce(ptAlpha.x, max)
-        let minX = bucket.reduce(ptAlpha.x, min)
-        
-        
-        bucket = [Double]()   // Start with an empty array
-        
-        for u in 1...limit   {
-            let pip = self.pointAt(t: Double(u) * step)
-            bucket.append(pip.y)
-        }
-        
-        bucket.append(ptOmega.y)
-        
-        let maxY = bucket.reduce(ptAlpha.y, max)
-        let minY = bucket.reduce(ptAlpha.y, min)
-        
-        bucket = [Double]()   // Start with an empty array
-        
-        for u in 1...limit   {
-            let pip = self.pointAt(t: Double(u) * step)
-            bucket.append(pip.z)
-        }
-        
-        bucket.append(ptOmega.z)
-        
-        var maxZ = bucket.reduce(ptAlpha.z, max)
-        var minZ = bucket.reduce(ptAlpha.z, min)
+        var maxZ = bucketZ.reduce(ptAlpha.z, max)
+        var minZ = bucketZ.reduce(ptAlpha.z, min)
         
         
         // Avoid the case of zero thickness
@@ -435,12 +400,36 @@ open class Cubic: PenCurve   {
         let diffY = maxY - minY
         let diffZ = maxZ - minZ
         
-        let bigDiff = max(diffX, diffY)
-        let percent = 0.01 * bigDiff
+        let bigDiff = max(diffX, diffY, diffZ)
         
-        if abs(diffZ) < percent   {
-            maxZ += 0.5 * percent
-            minZ -= 0.5 * percent
+        /// Minimum thickness for the volume
+        let minThick = 0.01 * bigDiff
+        
+        let skinny = min(diffX, diffY, diffZ)
+        
+           // Check if any direction is too thin
+        if skinny < minThick   {
+            
+            switch skinny   {
+                
+            case diffX:
+                maxX += 0.5 * minThick
+                minX -= 0.5 * minThick
+                
+            case diffY:
+                maxY += 0.5 * minThick
+                minY -= 0.5 * minThick
+                
+            case diffZ:
+                maxZ += 0.5 * minThick
+                minZ -= 0.5 * minThick
+                
+            default:   // Never should get here
+                maxZ += 0.5 * minThick
+                minZ -= 0.5 * minThick
+                
+            }
+            
         }
         
         
@@ -450,55 +439,55 @@ open class Cubic: PenCurve   {
     }
     
     
-    /// Tweak the curve by changing one control point
-    /// - Parameters:
-    ///   - deltaX: Location change in X direction
-    ///   - deltaY: Location change in Y direction
-    ///   - deltaZ: Location change in Z direction
-    ///   - modA: Selector for which control point gets modified
-    public func modifyControlPoint(deltaX: Double, deltaY: Double, deltaZ: Double, modA: Bool) -> Void   {
-        
-        if modA   {
-            
-            self.controlA!.x += deltaX
-            self.controlA!.y += deltaY
-            self.controlA!.z += deltaZ
-            
-        }  else  {
-            
-            self.controlB!.x += deltaX
-            self.controlB!.y += deltaY
-            self.controlB!.z += deltaZ
-            
-        }
-        
-        parameterizeBezier()
-    }
-    
-    /// Tweak a Bezier curve by changing an end point
-    /// - Parameters:
-    ///   - deltaX: Location change in X direction
-    ///   - deltaY: Location change in Y direction
-    ///   - deltaZ: Location change in Z direction
-    ///   - modAlpha: Selector for which control point gets modified
-    public func modifyEndPoint(deltaX: Double, deltaY: Double, deltaZ: Double, modAlpha: Bool) -> Void   {
-        
-        if modAlpha   {
-            
-            self.ptAlpha.x += deltaX
-            self.ptAlpha.y += deltaY
-            self.ptAlpha.z += deltaZ
-            
-        }  else  {
-            
-            self.ptOmega.x += deltaX
-            self.ptOmega.y += deltaY
-            self.ptOmega.z += deltaZ
-            
-        }
-        
-        parameterizeBezier()
-    }
+//    /// Tweak the curve by changing one control point
+//    /// - Parameters:
+//    ///   - deltaX: Location change in X direction
+//    ///   - deltaY: Location change in Y direction
+//    ///   - deltaZ: Location change in Z direction
+//    ///   - modA: Selector for which control point gets modified
+//    public func modifyControlPoint(deltaX: Double, deltaY: Double, deltaZ: Double, modA: Bool) -> Void   {
+//
+//        if modA   {
+//
+//            self.controlA!.x += deltaX
+//            self.controlA!.y += deltaY
+//            self.controlA!.z += deltaZ
+//
+//        }  else  {
+//
+//            self.controlB!.x += deltaX
+//            self.controlB!.y += deltaY
+//            self.controlB!.z += deltaZ
+//
+//        }
+//
+//        parameterizeBezier()
+//    }
+//
+//    /// Tweak a Bezier curve by changing an end point
+//    /// - Parameters:
+//    ///   - deltaX: Location change in X direction
+//    ///   - deltaY: Location change in Y direction
+//    ///   - deltaZ: Location change in Z direction
+//    ///   - modAlpha: Selector for which control point gets modified
+//    public func modifyEndPoint(deltaX: Double, deltaY: Double, deltaZ: Double, modAlpha: Bool) -> Void   {
+//
+//        if modAlpha   {
+//
+//            self.ptAlpha.x += deltaX
+//            self.ptAlpha.y += deltaY
+//            self.ptAlpha.z += deltaZ
+//
+//        }  else  {
+//
+//            self.ptOmega.x += deltaX
+//            self.ptOmega.y += deltaY
+//            self.ptOmega.z += deltaZ
+//
+//        }
+//
+//        parameterizeBezier()
+//    }
     
     
     /// Find points spaced along the curve that do not exceed an allowable crown.
@@ -685,7 +674,7 @@ open class Cubic: PenCurve   {
         let tControlA = Point3D.transform(pip: self.controlA!, xirtam: xirtam)
         let tControlB = Point3D.transform(pip: self.controlB!, xirtam: xirtam)
         
-        let fresh = Cubic(ptA: tAlpha, controlA: tControlA, controlB: tControlB, ptB: tOmega)
+        let fresh = try! Cubic(ptA: tAlpha, controlA: tControlA, controlB: tControlB, ptB: tOmega)
         fresh.setIntent(purpose: self.usage)   // Copy setting instead of having the default
         
         return fresh

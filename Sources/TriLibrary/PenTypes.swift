@@ -13,15 +13,17 @@ import Foundation
 /// - Notes:  Will probably vary for each different app.
 public enum PenTypes {
     
-    case Triangle
+//    case Triangle
+//
+//    case Paired
+//
+//    case Positive
+//
+//    case Negative
+//
+//    case Overflow
     
-    case Paired
-    
-    case Positive
-    
-    case Negative
-    
-    case Overflow
+    case Selected
     
     case Ordinary
     
