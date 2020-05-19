@@ -9,8 +9,7 @@
 import Foundation
 
 /// Simple representation of a position in space by the use of three orthogonal coordinates.
-/// The default initializer suffices.
-public struct  Point3D: Hashable {
+public struct Point3D: Hashable {
     
     var x: Double    // Eventually these should be set as private?
     var y: Double
@@ -20,6 +19,14 @@ public struct  Point3D: Hashable {
     /// Threshhold of separation for equality checks
     public static var Epsilon: Double = 0.0001
     
+    
+    /// The simplest and only initializer.  Needed because a default initializer has 'internal' access level.
+    /// - See: 'testFidelity' under Point3DTests
+    public init(x: Double, y: Double, z: Double)   {
+        self.x = x
+        self.y = y
+        self.z = z
+    }
     
     
     /// Generate the unique value using Swift 4.2 tools

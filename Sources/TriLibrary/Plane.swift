@@ -48,7 +48,7 @@ public struct Plane   {
         
         guard Point3D.isThreeUnique(alpha: alpha, beta: beta, gamma: gamma)  else  { throw CoincidentPointsError(dupePt: alpha) }
         
-        // TODO: Come up with a better error type
+        // TODO: Come up with a better error type. Should ArcPointsError be changed to apply here?
         guard !Point3D.isThreeLinear(alpha: alpha, beta: beta, gamma: gamma)  else  { throw CoincidentPointsError(dupePt: alpha) }
         
         
@@ -178,11 +178,12 @@ public struct Plane   {
     }
     
     
-    /// Flip points to the opposite side of the plane
+    /// Flip point to the opposite side of the plane
     /// - Parameters:
     ///   - flat:  Mirroring plane
     ///   - pip:  Point to be flipped
     /// - Returns: New point
+    /// - See: 'testMirrorPoint' under PlaneTests
     public static func mirror(flat: Plane, pip: Point3D) -> Point3D   {
         
         /// Vector components from the Plane origin
@@ -203,6 +204,7 @@ public struct Plane   {
     ///   - flat:  Mirroring plane
     ///   - wire:  LineSeg to be flipped
     /// - Returns: New LineSeg
+    /// - See: 'testMirrorLineSeg' under PlaneTests
     public static func mirror(flat: Plane, wire: LineSeg) -> LineSeg   {
         
         /// Point to be worked on

@@ -263,4 +263,23 @@ class LineSegTests: XCTestCase {
         
     }
     
+    func testEquals()   {
+        
+        let ptA = Point3D(x: 4.0, y: 2.0, z: 5.0)
+        let ptB = Point3D(x: 2.0, y: 4.0, z: 5.0)
+        
+        let stalk = try! LineSeg(end1: ptA, end2: ptB)
+        
+        let ptA2 = Point3D(x: 4.0, y: 2.0, z: 5.0)
+        let ptB2 = Point3D(x: 2.0, y: 4.0, z: 5.0)
+        
+        let bar = try! LineSeg(end1: ptA2, end2: ptB2)
+        
+        XCTAssertEqual(stalk, bar)
+        
+        let bat = try! LineSeg(end1: ptB2, end2: ptA2)
+
+        XCTAssertNotEqual(stalk, bat)
+    }
+    
 }

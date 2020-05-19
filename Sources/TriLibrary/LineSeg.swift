@@ -9,7 +9,7 @@
 import Foundation
 
 /// A wire between two points.
-public class LineSeg: PenCurve {
+public class LineSeg: PenCurve, Equatable {
     
     
     // Can this be a struct, instead?
@@ -300,6 +300,21 @@ public class LineSeg: PenCurve {
         }
         
         return trialT
+    }
+    
+    // TODO: This leads one to think that an "isReversed" test would be good.
+    
+    /// Compare each endpoint of the segment.
+    /// - Parameters:
+    ///   - lhs:  One LineSeg for comparison
+    ///   - rhs:  Another LineSeg for comparison
+    /// - See: 'testEquals' under LineSegTests.
+    public static func == (lhs: LineSeg, rhs: LineSeg) -> Bool   {
+        
+        let flagOne = lhs.endAlpha == rhs.endAlpha
+        let flagOther = lhs.endOmega == rhs.endOmega
+        
+        return flagOne && flagOther
     }
     
 }

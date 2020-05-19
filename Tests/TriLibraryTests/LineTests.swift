@@ -165,6 +165,7 @@ class LineTests: XCTestCase {
         
         let arrow2 = try! Line(spot: orig2, arrow: dir2)
         
+            // They have an intersection
         XCTAssert(Line.isCoplanar(straightA: arrow1, straightB: arrow2))
         
         
@@ -195,16 +196,25 @@ class LineTests: XCTestCase {
            // No intersection case
 //        let orig4 = Point3D(x: 10.5, y: 5.5, z: 1.0)
 //        let dir4 = Vector3D(i: 0.0, j: 0.0, k: 1.0)
-//        
+//
 //        let arrow4 = try! Line(spot: orig4, arrow: dir4)
-//        
+//
 //        let orig5 = Point3D(x: 6.2, y: 6.5, z: 3.0)
 //        let dir5 = Vector3D(i: 1.0, j: 0.0, k: 0.0)
-//        
+//
 //        let arrow5 = try! Line(spot: orig5, arrow: dir5)
-//        
+//
 //        XCTAssertFalse(Line.isCoplanar(straightA: arrow4, straightB: arrow5))
+//
         
+        let cOrig = Point3D(x: 4.0, y: 7.5, z: -2.75)
+        var cDir = Vector3D(i: -1.0, j: -1.0, k: -1.0)
+        cDir.normalize()
+        
+        let atlas = try! Line(spot: cOrig, arrow: cDir)
+
+             // Parallel
+        XCTAssert(Line.isCoplanar(straightA: redstone, straightB: atlas))
         
     }
     
@@ -314,4 +324,35 @@ class LineTests: XCTestCase {
         XCTAssert(comps == target)
     }
     
+    func testEquals()   {
+        
+        let knob = Point3D(x: 2.5, y: 1.6, z: -1.35)
+        let dir = Vector3D(i: 1.0, j: 0.0, k: 0.0)
+        
+        let ray = try! Line(spot: knob, arrow: dir)
+        
+        let pip = Point3D(x: 2.5, y: 1.7, z: -1.35)
+        let beam = try! Line(spot: pip, arrow: dir)
+        
+           // Parallel
+        XCTAssertNotEqual(ray, beam)
+        
+        let pebble = Point3D(x: 1.5, y: 1.6, z: -1.35)
+        let beam2 = try! Line(spot: pebble, arrow: dir)
+        
+           // Coincident
+        XCTAssertNotEqual(ray, beam2)
+        
+        let dir2 = Vector3D(i: -1.0, j: 0.0, k: 0.0)
+        let beam3 = try! Line(spot: knob, arrow: dir2)
+        
+           // Coincident but opposite
+        XCTAssertNotEqual(ray, beam3)
+        
+        let bump = Point3D(x: 2.5, y: 1.6, z: -1.35)
+        let thataway = Vector3D(i: 1.0, j: 0.0, k: 0.0)
+        
+        let beam4 = try! Line(spot: bump, arrow: thataway)
+        XCTAssertEqual(ray, beam4)
+    }
 }

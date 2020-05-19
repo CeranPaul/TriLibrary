@@ -21,6 +21,15 @@ public struct Vector3D: Equatable {
     public static var EpsilonV: Double = 0.0001
 
     
+    /// The simplest and only initializer.  Needed because a default initializer has 'internal' access level.
+    /// What if the values are smaller than EpsilonV?  This might hold true for Point3D as well.
+    public init(i: Double, j: Double, k: Double)   {
+        self.i = i
+        self.j = j
+        self.k = k
+    }
+    
+
     
     /// Destructively make this a unit vector
     /// - See: 'testNormalize' under Vector3DTests
@@ -145,10 +154,14 @@ public struct Vector3D: Equatable {
             
             let len = sqrt(deltaX * deltaX + deltaY * deltaY + deltaZ * deltaZ)
             
-            if len != Vector3D.EpsilonV   {
+            if len > Vector3D.EpsilonV   {
                 deltaX = deltaX / len
                 deltaY = deltaY / len
                 deltaZ = deltaZ / len
+            } else {
+                deltaX = 0.0
+                deltaY = 0.0
+                deltaZ = 0.0
             }
         }
         

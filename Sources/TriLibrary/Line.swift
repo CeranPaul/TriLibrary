@@ -132,6 +132,7 @@ public struct Line: Equatable {
     ///   - straightB:  Second test line
     /// - Returns: Simple flag
     /// - SeeAlso:  Overloaded ==
+    /// - See: 'testIsParallel' under LineTests
     public static func isParallel(straightA: Line, straightB: Line) -> Bool   {
         
         let sameFlag = straightA.getDirection() == straightB.getDirection()
@@ -162,16 +163,16 @@ public struct Line: Equatable {
     /// - Returns: Simple flag
     /// - SeeAlso:  Overloaded ==
     /// - SeeAlso:  Line.isParallel()
+    /// - See: 'testIsCoPlanar' under LineTests
     public static func isCoplanar(straightA: Line, straightB: Line) -> Bool   {
         
         if Line.isCoincident(straightA: straightA, straightB: straightB) { return true }   // Shortcut!
+        if Line.isParallel(straightA: straightA, straightB: straightB) { return true }
         
-        
-        var bridgeVector = Vector3D.built(from: straightA.getOrigin(), towards: straightB.getOrigin())
+        /// Between the origins of the two lines
+        let bridgeVector = Vector3D.built(from: straightA.getOrigin(), towards: straightB.getOrigin(), unit: true)
         
         if bridgeVector.isZero() { return true }   // Having the same origin means that they intersect.
-        
-        bridgeVector.normalize()   // A zero case would have exited in the line above
         
         
         var perp1 = try! Vector3D.crossProduct(lhs: straightA.getDirection(), rhs: bridgeVector)
@@ -194,6 +195,7 @@ public struct Line: Equatable {
     /// - Throws: CoincidentLinesError if the inputs are the same
     /// - Throws: ParallelLinesError if the inputs are parallel
     /// - Throws: NonCoPlanarLinesError if the inputs don't lie in the same plane
+    /// - See: 'testIntersectTwo' under LineTests
     public static func intersectTwo (straightA: Line, straightB: Line) throws -> Point3D  {
         
         guard !Line.isCoincident(straightA: straightA, straightB: straightB) else { throw CoincidentLinesError(enil: straightA)}
@@ -284,12 +286,12 @@ public struct Line: Equatable {
 
 
 
-/// Check to see that the second origin lies on the first Line, and that
-///  the directions are identical.  Opposite direction will fail this test.
+/// Check to see that two have the same definition.
 /// - SeeAlso:  isCoincident
+/// - See: 'testIEquals' under LineTests
 public func == (lhs: Line, rhs: Line) -> Bool   {
     
-    let flag1 = Line.isCoincident(straightA: lhs, pip: rhs.origin)
+    let flag1 = lhs.origin == rhs.origin
     
     let flag2 = lhs.direction == rhs.direction
     
