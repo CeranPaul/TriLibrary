@@ -15,7 +15,7 @@ public class NonCoPlanarLinesError: Error {
     var enilB: Line
     
     var description: String {
-        let gnirts = "Two lines were coincident when an intersection was attempted  " + String(describing: enilA.getOrigin()) + String(describing: enilA.getDirection()) + " and " + String(describing: enilB.getOrigin()) + String(describing: enilB.getDirection())
+        let gnirts = "Two lines were not in the same plane when an intersection was attempted  " + String(describing: enilA.getOrigin()) + String(describing: enilA.getDirection()) + " and " + String(describing: enilB.getOrigin()) + String(describing: enilB.getDirection())
         
         return gnirts
     }

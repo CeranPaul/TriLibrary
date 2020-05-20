@@ -9,7 +9,7 @@
 import Foundation
 
 /// Unbounded flat surface
-public struct Plane   {
+public struct Plane: Equatable   {
     
     /// A point to locate the plane
     private var location: Point3D
@@ -81,17 +81,6 @@ public struct Plane   {
     }
     
     
-    /// A wrapper to conform with protocol "Surfs"
-    /// - Parameters:
-    ///   - pip:  Point of interest
-    /// - Returns: Simple flag
-    public func isOn(pip: Point3D) -> Bool   {
-        
-        let flag = Plane.isCoincident(flat: self, pip: pip)
-        return flag
-    }
-    
-    
     /// Build orthogonal vectors from the origin of the plane to the point
     /// - Parameters:
     ///   - pip:  Point of interest
@@ -153,18 +142,6 @@ public struct Plane   {
         return  abs(distanceOffPlane) < Point3D.Epsilon
     }
     
-    /// Are the normals either parallel or opposite?
-    /// - Parameters:
-    ///   - lhs:  One plane for testing
-    ///   - rhs:  Another plane for testing
-    /// - Returns: Simple flag
-    /// - SeeAlso:  isCoincident and ==
-    /// - See: 'testIsParallelPlane' under PlaneTests
-    public static func isParallel(lhs: Plane, rhs: Plane) -> Bool{
-        
-        return lhs.normal == rhs.normal || Vector3D.isOpposite(lhs: lhs.normal, rhs: rhs.normal)
-    }
-    
     /// Planes are parallel, and rhs location lies on lhs
     /// - Parameters:
     ///   - lhs:  One plane for testing
@@ -177,6 +154,18 @@ public struct Plane   {
         return Plane.isCoincident(flat: lhs, pip: rhs.location) && Plane.isParallel(lhs: lhs, rhs: rhs)
     }
     
+    
+    /// Are the normals either parallel or opposite?
+    /// - Parameters:
+    ///   - lhs:  One plane for testing
+    ///   - rhs:  Another plane for testing
+    /// - Returns: Simple flag
+    /// - SeeAlso:  isCoincident and ==
+    /// - See: 'testIsParallelPlane' under PlaneTests
+    public static func isParallel(lhs: Plane, rhs: Plane) -> Bool{
+        
+        return lhs.normal == rhs.normal || Vector3D.isOpposite(lhs: lhs.normal, rhs: rhs.normal)
+    }
     
     /// Flip point to the opposite side of the plane
     /// - Parameters:
@@ -388,4 +377,3 @@ public func == (lhs: Plane, rhs: Plane) -> Bool   {
     
     return sameDir && sameLoc
 }
-

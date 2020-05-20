@@ -63,6 +63,41 @@ class CoordinateSystemTests: XCTestCase {
         
         XCTAssertFalse(try CoordinateSystem.isMutOrtho(uno: axis1, dos: axis2, tres: axis3))
         
+           // Test that the guard statements prevent trouble
+        axis3 = Vector3D(i: 0.5, j: 0.5, k: 0.5)
+        
+        
+        do   {
+            _ = try CoordinateSystem.isMutOrtho(uno: axis1, dos: axis2, tres: axis3)
+        } catch is NonUnitDirectionError {
+            XCTAssert(true)
+        } catch {
+            XCTFail()
+        }
+        
+        
+        axis2 = Vector3D(i: 0.5, j: 0.5, k: 0.5)
+        axis3 = Vector3D(i: sqrt(3.0) / 2.0, j: 0.5, k: 0.0)
+
+        do   {
+            _ = try CoordinateSystem.isMutOrtho(uno: axis1, dos: axis2, tres: axis3)
+        } catch is NonUnitDirectionError {
+            XCTAssert(true)
+        } catch {
+            XCTFail()
+        }
+        
+        axis1 = Vector3D(i: 0.5, j: 0.5, k: 0.5)
+        axis2 = Vector3D(i: -sqrt22, j: sqrt22, k: 0.0)
+        
+        do   {
+            _ = try CoordinateSystem.isMutOrtho(uno: axis1, dos: axis2, tres: axis3)
+        } catch is NonUnitDirectionError {
+            XCTAssert(true)
+        } catch {
+            XCTFail()
+        }
+        
     }
     
     
@@ -145,7 +180,12 @@ class CoordinateSystemTests: XCTestCase {
         
         XCTAssertThrowsError(try CoordinateSystem(spot: home, direction1: vec1, direction2: vec5, useFirst: true, verticalRef: false))
         
+           // Check on the scaling guard statement
+        let vec7 = Vector3D(i: 0.0, j: 0.0, k: -3.0)
         
+        XCTAssertThrowsError(try CoordinateSystem(spot: home, direction1: vec1, direction2: vec7, useFirst: true, verticalRef: false))
+        
+
         let vec6 = Vector3D(i: 0.0, j: 1.0, k: 0.0)
         
         let rotSide = try! CoordinateSystem(spot: home, direction1: vec2, direction2: vec6, useFirst: true, verticalRef: false)

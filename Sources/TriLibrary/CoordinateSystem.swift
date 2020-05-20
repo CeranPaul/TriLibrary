@@ -9,7 +9,7 @@
 import Foundation
 
 /// Three coordinates and three orthogonal axes
-public struct CoordinateSystem   {
+public struct CoordinateSystem: Equatable   {
     
     /// Can be changed with 'relocate' function
     private var origin: Point3D

@@ -10,7 +10,7 @@ import Foundation
 
 /// Matrix built the way I was taught in college, as opposed to being twisted to use SIMD.
 /// This uses some overloaded operators.
-public struct Transform   {
+public struct Transform: Equatable   {
     
     var a, b, c, d: Double   // Labeling is done across each row, then down
     var e, f, g, h: Double
@@ -367,30 +367,30 @@ public func == (lhs: Transform, rhs: Transform) -> Bool  {
     let c = abs(lhs.c - rhs.c) < Vector3D.EpsilonV
     let d = abs(lhs.d - rhs.d) < Vector3D.EpsilonV
     
-    let row1 = a && b && c && d
+    let row1Flag = a && b && c && d
     
     let e = abs(lhs.e - rhs.e) < Vector3D.EpsilonV
     let f = abs(lhs.f - rhs.f) < Vector3D.EpsilonV
     let g = abs(lhs.g - rhs.g) < Vector3D.EpsilonV
     let h = abs(lhs.h - rhs.h) < Vector3D.EpsilonV
     
-    let row2 = e && f && g && h
+    let row2Flag = e && f && g && h
     
     let j = abs(lhs.j - rhs.j) < Vector3D.EpsilonV
     let k = abs(lhs.k - rhs.k) < Vector3D.EpsilonV
     let m = abs(lhs.m - rhs.m) < Vector3D.EpsilonV
     let n = abs(lhs.n - rhs.n) < Vector3D.EpsilonV
     
-    let row3 = j && k && m && n
+    let row3Flag = j && k && m && n
     
     let p = abs(lhs.p - rhs.p) < Point3D.Epsilon
     let r = abs(lhs.r - rhs.r) < Point3D.Epsilon
     let s = abs(lhs.s - rhs.s) < Point3D.Epsilon
     let t = abs(lhs.t - rhs.t) < Point3D.Epsilon
     
-    let row4 = p && r && s && t
+    let row4Flag = p && r && s && t
     
-    return row1 && row2 && row3 && row4
+    return row1Flag && row2Flag && row3Flag && row4Flag
 }
 
 
