@@ -31,6 +31,7 @@ public struct Point3D: Hashable {
     
     /// Generate the unique value using Swift 4.2 tools
     /// Is a required func for a subclass of Hashable
+    /// - See: 'testHashValue' under Point3DTests
     public func hash(into hasher: inout Hasher)   {
         
         let divX = self.x / Point3D.Epsilon
@@ -76,6 +77,27 @@ public struct Point3D: Hashable {
         return transformed
     }
     
+    
+    
+    /// Flip point to the opposite side of the plane
+    /// - Parameters:
+    ///   - flat:  Mirroring plane
+    ///   - pip:  Point to be flipped
+    /// - Returns: New point
+    /// - See: 'testMirrorPoint' under PlaneTests
+    public static func mirror(flat: Plane, pip: Point3D) -> Point3D   {
+        
+        /// Vector components from the Plane origin
+        let comps = Plane.resolveRelativeVec(flat: flat, pip: pip)
+        
+        /// Vector to apply to the original point
+        let jump = comps.perp * -2.0
+        
+        ///New point from mirroring
+        let fairest = Point3D.offset(pip: pip, jump: jump)
+        
+        return fairest
+    }
     
     
     /// Calculate the distance between two of 'em
@@ -174,6 +196,7 @@ public struct Point3D: Hashable {
 
     /// Throw away the Z value and convert
     /// Should this become a computed member variable?
+    /// - See: 'testMakeCGPoint' under Point3DTests
     public static func makeCGPoint(pip: Point3D) -> CGPoint   {
         
         return CGPoint(x: pip.x, y: pip.y)
@@ -183,11 +206,9 @@ public struct Point3D: Hashable {
     /// - See: 'testEqual' under Point3DTests
     public static func == (lhs: Point3D, rhs: Point3D) -> Bool   {
         
-        let separation = Point3D.dist(pt1: lhs, pt2: rhs)
+        let separation = Point3D.dist(pt1: lhs, pt2: rhs)   // Always positive
         
         return separation < Point3D.Epsilon
     }
 
 }
-
-

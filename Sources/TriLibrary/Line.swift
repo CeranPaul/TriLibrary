@@ -192,9 +192,10 @@ public struct Line: Equatable {
     /// - Parameters:
     ///   - straightA:  First test line
     ///   - straightB:  Second test line
-    /// - Throws: CoincidentLinesError if the inputs are the same
-    /// - Throws: ParallelLinesError if the inputs are parallel
-    /// - Throws: NonCoPlanarLinesError if the inputs don't lie in the same plane
+    /// - Throws:
+    ///     - CoincidentLinesError if the inputs are the same
+    ///     - ParallelLinesError if the inputs are parallel
+    ///     - NonCoPlanarLinesError if the inputs don't lie in the same plane
     /// - See: 'testIntersectTwo' under LineTests
     public static func intersectTwo (straightA: Line, straightB: Line) throws -> Point3D  {
         
@@ -235,7 +236,11 @@ public struct Line: Equatable {
     ///   - ptB:  Second point
     ///   - up:  Normal for the plane in which the points lie
     /// - Returns: Fresh Line
+    /// - Throws:
+    ///     - ZeroVectorError if the inputs are lame
     public static func genBisect(ptA: Point3D, ptB: Point3D, up: Vector3D) throws -> Line   {
+        
+        guard !up.isZero() else { throw ZeroVectorError(dir: up) }
         
         let along = Vector3D.built(from: ptA, towards: ptB, unit: true)
         

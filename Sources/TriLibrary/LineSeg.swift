@@ -9,7 +9,7 @@
 import Foundation
 
 /// A wire between two points.
-public class LineSeg: PenCurve, Equatable {
+public class LineSeg: Equatable {
     
     
     // Can this be a struct, instead?
@@ -76,18 +76,43 @@ public class LineSeg: PenCurve, Equatable {
     
     /// Move, rotate, and scale by a matrix
     /// - Throws: CoincidentPointsError if it was scaled to be very small
-    public func transform(xirtam: Transform) throws -> PenCurve {
+    public static func transform(xirtam: Transform, wire: LineSeg) throws -> LineSeg {
         
-        let tAlpha = Point3D.transform(pip: endAlpha, xirtam: xirtam)
-        let tOmega = Point3D.transform(pip: endOmega, xirtam: xirtam)
+        let tAlpha = Point3D.transform(pip: wire.endAlpha, xirtam: xirtam)
+        let tOmega = Point3D.transform(pip: wire.endOmega, xirtam: xirtam)
         
         let transformed = try LineSeg(end1: tAlpha, end2: tOmega)   // Will generate a new extent
-        transformed.setIntent(purpose: self.usage)   // Copy setting instead of having the default
+        transformed.setIntent(purpose: wire.usage)   // Copy setting instead of having the default
         
         return transformed
     }
 
     
+    
+    /// Flip line segment to the opposite side of the plane
+    /// - Parameters:
+    ///   - flat:  Mirroring plane
+    ///   - wire:  LineSeg to be flipped
+    /// - Returns: New LineSeg
+    /// - See: 'testMirrorLineSeg' under PlaneTests
+    public static func mirror(flat: Plane, wire: LineSeg) -> LineSeg   {
+        
+        /// Point to be worked on
+        var pip: Point3D = wire.getOneEnd()
+        
+        ///New point from mirroring
+        let fairest1 = Point3D.mirror(flat: flat, pip: pip)
+        
+        pip = wire.getOtherEnd()
+        
+        ///New point from mirroring
+        let fairest2 = Point3D.mirror(flat: flat, pip: pip)
+        
+        let mirroredLineSeg = try! LineSeg(end1: fairest1, end2: fairest2)
+        // The forced unwrapping should be no risk because it uses points from a LineSeg that has already checked out.
+        
+        return mirroredLineSeg
+    }
     
     /// Find the point along this line segment specified by the parameter 't'
     /// Assumes 0 < t < 1
@@ -112,13 +137,13 @@ public class LineSeg: PenCurve, Equatable {
         
         context.beginPath()
         
-        var spot = CGPoint(x: self.endAlpha.x, y: self.endAlpha.y)    // Throw out Z coordinate
-        var screenSpot = spot.applying(tform)
-        context.move(to: screenSpot)
+        var spot = Point3D.makeCGPoint(pip: self.endAlpha)    // Throw out Z coordinate
+        let screenSpotAlpha = spot.applying(tform)
+        context.move(to: screenSpotAlpha)
         
-        spot = CGPoint(x: self.endOmega.x, y: self.endOmega.y)    // Throw out Z coordinate
-        screenSpot = spot.applying(tform)
-        context.addLine(to: screenSpot)
+        spot = Point3D.makeCGPoint(pip: self.endOmega)    // Throw out Z coordinate
+        let screenSpotOmega = spot.applying(tform)
+        context.addLine(to: screenSpotOmega)
         
         context.strokePath()
     }

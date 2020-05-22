@@ -26,12 +26,6 @@ public protocol PenCurve   {
     /// Retrieve the finishing end
     func getOtherEnd() -> Point3D
     
-    /// Change the direction in-place.  Useful for traversing a Perimeter
-    func reverse() -> Void
-    
-    /// Transform with a 4 x 4 matrix, not a CGAffineTransform
-    func transform(xirtam: Transform) throws -> PenCurve
-    
     /// Figure the volume that encloses the curve
     /// Must have finite thickness in all three axes
     func getExtent() -> OrthoVol

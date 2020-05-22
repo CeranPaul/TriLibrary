@@ -167,52 +167,6 @@ public struct Plane: Equatable   {
         return lhs.normal == rhs.normal || Vector3D.isOpposite(lhs: lhs.normal, rhs: rhs.normal)
     }
     
-    /// Flip point to the opposite side of the plane
-    /// - Parameters:
-    ///   - flat:  Mirroring plane
-    ///   - pip:  Point to be flipped
-    /// - Returns: New point
-    /// - See: 'testMirrorPoint' under PlaneTests
-    public static func mirror(flat: Plane, pip: Point3D) -> Point3D   {
-        
-        /// Vector components from the Plane origin
-        let comps = Plane.resolveRelativeVec(flat: flat, pip: pip)
-        
-        /// Vector to apply to the original point
-        let jump = comps.perp * -2.0
-        
-        ///New point from mirroring
-        let fairest = Point3D.offset(pip: pip, jump: jump)
-        
-        return fairest
-    }
-    
-    
-    /// Flip line segment to the opposite side of the plane
-    /// - Parameters:
-    ///   - flat:  Mirroring plane
-    ///   - wire:  LineSeg to be flipped
-    /// - Returns: New LineSeg
-    /// - See: 'testMirrorLineSeg' under PlaneTests
-    public static func mirror(flat: Plane, wire: LineSeg) -> LineSeg   {
-        
-        /// Point to be worked on
-        var pip: Point3D = wire.getOneEnd()
-        
-        ///New point from mirroring
-        let fairest1 = Plane.mirror(flat: flat, pip: pip)
-        
-        pip = wire.getOtherEnd()
-        
-        ///New point from mirroring
-        let fairest2 = Plane.mirror(flat: flat, pip: pip)
-        
-        let mirroredLineSeg = try! LineSeg(end1: fairest1, end2: fairest2)
-        // The forced unwrapping should be no risk because it uses points from a LineSeg that has already checked out.
-        
-        return mirroredLineSeg
-    }
-    
 
     
     /// Construct a parallel plane offset some distance.

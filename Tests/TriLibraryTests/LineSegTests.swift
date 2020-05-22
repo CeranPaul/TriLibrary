@@ -95,6 +95,48 @@ class LineSegTests: XCTestCase {
         XCTAssertEqual(bar.getLength(), target)
     }
     
+    func testTransform()   {
+        
+        let hyar = Point3D(x: 5.0, y: 6.0, z: 3.5)
+        let thar = Point3D(x: 4.0, y: 6.0, z: 3.5)
+        
+        let pristine = try! LineSeg(end1: hyar, end2: thar)
+        
+        let targetOne = Point3D(x: -6.0, y: 5.0, z: 3.5)
+        let targetAnother = Point3D(x: -6.0, y: 4.0, z: 3.5)
+        
+        let pitched = try! LineSeg(end1: targetOne, end2: targetAnother)
+        
+        let swingZ = Transform(rotationAxis: Axis.z, angleRad: Double.pi / 2.0)
+        let swung = try! LineSeg.transform(xirtam: swingZ, wire: pristine)
+        
+        XCTAssert(swung == pitched)
+                
+    }
+
+    func testMirrorLineSeg()   {
+        
+        let hyar = Point3D(x: 5.0, y: 6.0, z: 3.5)
+        let thar = Point3D(x: 4.0, y: 6.0, z: 3.5)
+        
+        let wand = try! LineSeg(end1: hyar, end2: thar)
+        
+        let nexus = Point3D(x: 0.0, y: 0.0, z: 0.0)
+        
+        let XYdir = Vector3D(i: 0.0, j: 0.0, k: 1.0)
+        
+        let silver1 = try! Plane(spot: nexus, arrow: XYdir)
+        
+        let target1 = Point3D(x: 5.0, y: 6.0, z: -3.5)
+        let target2 = Point3D(x: 4.0, y: 6.0, z: -3.5)
+        
+        let desired = try! LineSeg(end1: target1, end2: target2)
+
+        let fairest = LineSeg.mirror(flat: silver1, wire: wand)
+        
+        XCTAssertEqual(fairest, desired)
+        
+    }
 
     func testReverse()   {
         
