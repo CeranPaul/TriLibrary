@@ -224,6 +224,13 @@ class CubicTests: XCTestCase {
         XCTAssertEqual(box.getOrigin().x, -2.9624, accuracy: 0.0001)
     }
     
+    func testFindCrown()   {
+        
+        let hump =  try! cup!.findCrown(smallerT: 0.20, largerT: 0.85)
+        
+        XCTAssertEqual(hump, 0.0543, accuracy: 0.0001)
+    }
+    
     func testRefine()   {
         
         let near = Point3D(x: 2.9, y: 1.4, z: 0.7)

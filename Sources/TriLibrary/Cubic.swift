@@ -480,6 +480,118 @@ open class Cubic: PenCurve   {
     }
     
     
+    /// Finds a higher parameter that meets the crown requirement.
+    /// - Parameters:
+    ///   - allowableCrown:  Acceptable deviation from curve
+    ///   - currentT:  Present value of the driving parameter
+    ///   - increasing:  Whether the change in parameter should be up or down
+    /// - Returns: New value for driving parameter
+    /// - Throws:
+    ///     - NegativeAccuracyError for bad allowable crown
+    ///     - ParameterRangeError if currentT is lame
+    /// This needs testing for boundary conditions and the decreasing flag condition.
+    public func findStep(allowableCrown: Double, currentT: Double, increasing: Bool) throws -> Double   {
+        
+        guard allowableCrown > 0.0 else { throw NegativeAccuracyError(acc: allowableCrown) }
+            
+        guard self.parameterRange.contains(currentT) else { throw ParameterRangeError(parA: currentT) }
+
+        /// How quickly to refine the parameter guess
+        let factor = 1.25
+        
+        /// Change in parameter - constantly refined.
+        var step = 1.0 - currentT
+        
+        if !increasing   {
+            step = -0.9999 * currentT   // I don't remember why that couldn't be -1.0
+        }
+        
+        /// Working value of the parameter
+        var trialT: Double
+        
+        /// Calculated crown
+        var deviation: Double
+        
+        /// Counter to prevent loop runaway
+        var safety = 0
+        
+        repeat   {
+            
+            if increasing   {
+                trialT = currentT + step
+                if currentT > (1.0 - step)   {   // Prevent parameter value > 1.0
+                    trialT = 1.0
+                }
+            }  else {
+                trialT = currentT - step
+                if currentT < step   {   // Prevent parameter value < 0.0
+                    trialT = 0.0
+                }
+            }
+            
+            deviation = try! self.findCrown(smallerT: currentT, largerT: trialT)
+
+            step = step / factor     // Prepare for the next iteration
+            safety += 1
+            
+        }  while deviation > allowableCrown  && safety < 12    // Fails ugly!
+        // TODO: Throw a ConvergenceError here if safety > 11
+        
+        return trialT
+    }
+    
+    
+    /// Calculate the crown over a small segment.
+    /// Works even with the smaller and larger values reversed?
+    /// - Parameters:
+    ///   - smallerT:  One location on the curve
+    ///   - largerT:  One location on the curve.
+    /// - Returns: Maximum distance away from line between ends
+    /// - Throws:
+    ///     - ParameterRangeError if either end of  the span input is lame
+    /// - See: 'testFindCrown' under CubicTests
+    public func findCrown(smallerT: Double, largerT: Double) throws -> Double   {
+        
+        guard self.parameterRange.contains(smallerT) else { throw ParameterRangeError(parA: smallerT) }
+        guard self.parameterRange.contains(largerT) else { throw ParameterRangeError(parA: largerT) }
+
+        /// Number of divisions to generate and check
+        var count = 20
+        
+        /// Parameter difference
+        let deltaTee = largerT - smallerT
+        
+        /// A larger number of divisions for a long curve
+        let biggerCount = Int(round(abs(deltaTee) * 100.0))
+        
+        if biggerCount > 20   {
+            count = biggerCount
+        }
+        
+        /// Parameter increment to be used
+        let step = deltaTee / Double(count)
+        
+        /// Points to be checked along the curve
+        var crownDots = [Point3D]()
+        
+        /// First point in range
+        let anchorA = try! self.pointAt(t: smallerT)
+        crownDots.append(anchorA)
+        
+        for g in 1...count - 1   {
+            
+            let pip = try! self.pointAt(t: smallerT + Double(g) * step)
+            crownDots.append(pip)
+        }
+        
+        /// Last point in range
+        let anchorB = try! self.pointAt(t: largerT)
+        crownDots.append(anchorB)
+        
+        let deviation = try! Cubic.crownCalcs(dots: crownDots)
+        return deviation
+    }
+    
     /// Find the curve's closest point.
     /// - Parameters:
     ///   - nearby:  Target point
@@ -539,7 +651,7 @@ open class Cubic: PenCurve   {
     /// - Returns: A smaller ClosedRange<Double>.
     /// - Throws:
     ///     - ParameterRangeError if either end of  the span input is lame
-    /// - See: 'testResolve' under CubicTests
+    /// - See: 'testRefine' under CubicTests
     public func refineRangeDist(nearby: Point3D, span: ClosedRange<Double>) throws -> ClosedRange<Double>?   {
         
         // Would be good to check that 'span' is a valid range.
@@ -548,7 +660,7 @@ open class Cubic: PenCurve   {
         guard self.parameterRange.contains(span.upperBound) else { throw ParameterRangeError(parA: span.upperBound)}
         
         /// Number of pieces to divide range
-        let chunks = 10
+        let chunks = 10  // What's the most efficient number?
         
         /// The return value
         var tighter: ClosedRange<Double>? = nil
