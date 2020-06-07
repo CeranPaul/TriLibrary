@@ -112,29 +112,24 @@ class CubicTests: XCTestCase {
     }
     
     func testPointAt()   {
+        
         let spot = try! cup?.pointAt(t: 0.5)
         
         let targetPt = Point3D(x: 2.7, y: 1.675, z: 0.7)
         
         XCTAssert(spot == targetPt)
-        
+                
         do   {
             _ = try cup?.pointAt(t: 1.7)
-        } catch is ParameterRangeError   {
+        } catch let screwup as ParameterRangeError {   // A contrived way to exercise the computed property
+            _ = screwup.description
             XCTAssert(true)
-        } catch   {
+        } catch {
             XCTFail()
         }
         
-        do   {
-            _ = try cup?.pointAt(t: 1.7)
-        } catch {   // A contrived way to exercise the computed property
-            let screwup = error as! ParameterRangeError
-            _ = screwup.description
-        }
-        
     }
-    
+
     func testTangentAt()   {
         
         let dir = try! cup?.tangentAt(t: 0.4)
@@ -262,8 +257,7 @@ class CubicTests: XCTestCase {
         
         XCTAssert(narrower4?.lowerBound == 0.0)
         XCTAssert(narrower4?.upperBound == 0.2)
-        
-        
+                
     }
     
     
@@ -276,6 +270,15 @@ class CubicTests: XCTestCase {
         let target = Point3D(x: 2.99392, y: 1.65063, z: 0.70000)
         
         XCTAssertEqual(buddy, target)
+        
+        do   {
+            _ = try cup!.findClosest(nearby: near, accuracy: -0.001)
+        } catch let screwup as NegativeAccuracyError {
+            _ = screwup.description
+            XCTAssert(true)
+        } catch {
+            XCTFail()
+        }
     }
     
     

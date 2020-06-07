@@ -128,8 +128,6 @@ class Vector3DTests: XCTestCase {
         trial = Vector3D.built(from: alpha, towards: beta, unit: true)
         
         XCTAssert(trial.isUnit())
-        
-        
 
     }
     
@@ -189,8 +187,7 @@ class Vector3DTests: XCTestCase {
         let scaled3 = raw * 0.0
         
         XCTAssert(scaled3 == nilVec)
-        
-        
+                
     }
     
     // Check for difference between direction and sense

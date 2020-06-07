@@ -117,7 +117,27 @@ public struct CoordinateSystem: Equatable   {
         self.origin = spot
     }
     
-    /// Simple getter
+    /// A construction method useful for Arcs
+    /// - Throws:
+    ///   - NonUnitDirectionError for any bad input vector
+    ///   - IdenticalVectorError for non-unique inputs
+    public init(origin: Point3D, refDirection: Vector3D, normal: Vector3D) throws   {
+        
+        guard (refDirection.isUnit()) else {  throw NonUnitDirectionError(dir: refDirection) }
+        guard (normal.isUnit()) else {  throw NonUnitDirectionError(dir: normal) }
+        
+        var vert = try Vector3D.crossProduct(lhs: normal, rhs: refDirection)
+        vert.normalize()
+
+        self.origin = origin
+        self.axisX = refDirection
+        self.axisY = vert
+        self.axisZ = normal
+        
+    }
+    
+    
+/// Simple getter
     public func getOrigin() -> Point3D   {
         
         return origin

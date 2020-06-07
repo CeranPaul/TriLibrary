@@ -9,7 +9,7 @@
 import Foundation
 
 /// A wire between two points.
-public class LineSeg: Equatable {
+public struct LineSeg: Equatable {
     
     
     // Can this be a struct, instead?
@@ -19,9 +19,9 @@ public class LineSeg: Equatable {
     fileprivate var endOmega: Point3D
         
     /// The enum that hints at the meaning of the curve
-    open var usage: PenTypes
+    public var usage: PenTypes
     
-    open var parameterRange: ClosedRange<Double>
+    public var parameterRange: ClosedRange<Double>
     
     /// Build a line segment from two points
     /// - Throws: CoincidentPointsError
@@ -42,19 +42,19 @@ public class LineSeg: Equatable {
     
     /// Fetch the location of an end
     /// - See: 'getOtherEnd()'
-    open func getOneEnd() -> Point3D   {
+    public func getOneEnd() -> Point3D   {
         return endAlpha
     }
     
     /// Fetch the location of the opposite end
     /// - See: 'getOneEnd()'
-    open func getOtherEnd() -> Point3D   {
+    public func getOtherEnd() -> Point3D   {
         return endOmega
     }
     
     
     /// Attach new meaning to the curve
-    open func setIntent(purpose: PenTypes)   {
+    public mutating func setIntent(purpose: PenTypes)   {
         
         self.usage = purpose
     }
@@ -66,7 +66,7 @@ public class LineSeg: Equatable {
     }
     
     /// Flip the order of the end points  Used to align members of a Perimeter
-    open func reverse() -> Void  {
+    public mutating func reverse() -> Void  {
         
         let bubble = self.endAlpha
         self.endAlpha = self.endOmega
@@ -81,7 +81,7 @@ public class LineSeg: Equatable {
         let tAlpha = Point3D.transform(pip: wire.endAlpha, xirtam: xirtam)
         let tOmega = Point3D.transform(pip: wire.endOmega, xirtam: xirtam)
         
-        let transformed = try LineSeg(end1: tAlpha, end2: tOmega)   // Will generate a new extent
+        var transformed = try LineSeg(end1: tAlpha, end2: tOmega)   // Will generate a new extent
         transformed.setIntent(purpose: wire.usage)   // Copy setting instead of having the default
         
         return transformed
@@ -117,8 +117,9 @@ public class LineSeg: Equatable {
     /// Find the point along this line segment specified by the parameter 't'
     /// Assumes 0 < t < 1
     /// - Throws: CoincidentPointsError
-    open func pointAt(t: Double) -> Point3D  {
+    public func pointAt(t: Double) -> Point3D  {
         
+        //TODO: Range checking would be good
         let wholeVector = Vector3D.built(from: self.endAlpha, towards: self.endOmega, unit: false)
         
         let scaled = wholeVector * t
@@ -190,7 +191,7 @@ public class LineSeg: Equatable {
     
     /// Create a unit vector showing direction
     /// - Returns: Unit vector to indicate direction
-    open func getDirection() -> Vector3D   {
+    public func getDirection() -> Vector3D   {
         
         return Vector3D.built(from: self.endAlpha, towards: self.endOmega, unit: true)
     }

@@ -237,10 +237,18 @@ public struct Line: Equatable {
     ///   - up:  Normal for the plane in which the points lie
     /// - Returns: Fresh Line
     /// - Throws:
-    ///     - ZeroVectorError if the inputs are lame
+    ///     - ZeroVectorError if the input vector is lame
+    ///     - CoincidentPointsError if the points are not unique
+    ///     - NonUnitDirectionError for  a bad vector
+    /// - See: 'testGenBisect' under LineTests
     public static func genBisect(ptA: Point3D, ptB: Point3D, up: Vector3D) throws -> Line   {
         
+        guard ptA != ptB else  { throw CoincidentPointsError(dupePt: ptA) }
+        
         guard !up.isZero() else { throw ZeroVectorError(dir: up) }
+        
+        guard up.isUnit() else { throw NonUnitDirectionError(dir: up) }
+        
         
         let along = Vector3D.built(from: ptA, towards: ptB, unit: true)
         

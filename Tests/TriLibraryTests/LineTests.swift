@@ -192,7 +192,7 @@ class LineTests: XCTestCase {
         
         XCTAssert(Line.isCoplanar(straightA: redstone, straightB: titan))
         
-        
+        // TODO: Figure out why this doesn't work!
            // No intersection case
 //        let orig4 = Point3D(x: 10.5, y: 5.5, z: 1.0)
 //        let dir4 = Vector3D(i: 0.0, j: 0.0, k: 1.0)
@@ -261,6 +261,8 @@ class LineTests: XCTestCase {
         let flatOrig = Point3D(x: 1.0, y: 0.0, z: 0.0)
         let flatDir = Vector3D(i: 0.0, j: 1.0, k: 0.0)
         
+        let flat = try! Line(spot: flatOrig, arrow: flatDir)
+
         let P51Orig = Point3D(x: 3.0, y: 1.0, z: 0.0)
         var P51Dir = Vector3D(i: -0.707, j: 0.707, k: 0.0)
         P51Dir.normalize()
@@ -269,7 +271,6 @@ class LineTests: XCTestCase {
         
         do   {
             
-            let flat = try Line(spot: flatOrig, arrow: flatDir)
             let pursuit = try Line(spot: P51Orig, arrow: P51Dir)
             
             let crossroads = try Line.intersectTwo(straightA: flat, straightB: pursuit)
@@ -304,7 +305,54 @@ class LineTests: XCTestCase {
             print("Did you really throw an error in a test case?  Line Intersect Two B")
         }
         
+        do   {
+            
+            let A36dir = Vector3D(i: 0.0, j: 1.0, k: 0.0)
+            let merlin = try! Line(spot: P51Orig, arrow: A36dir)
+            
+            let crossroads = try Line.intersectTwo(straightA: flat, straightB: merlin)
+            
+            XCTAssert(crossroads == target2)
+            
+        } catch is ParallelLinesError  {
+            XCTAssert(true)
+        } catch {
+            XCTFail()
+        }
+
+        do   {
+            
+            let crossroads = try Line.intersectTwo(straightA: flat, straightB: flat)
+            
+            print(crossroads)
+            
+            XCTAssert(crossroads == target2)
+            
+        } catch is CoincidentLinesError  {
+            XCTAssert(true)
+        } catch {
+            XCTFail()
+        }
+
         
+        do   {
+            
+            let A36dir = Vector3D(i: 0.0, j: 0.0, k: 1.0)
+            let merlin = try! Line(spot: P51Orig, arrow: A36dir)
+            
+            let crossroads = try Line.intersectTwo(straightA: flat, straightB: merlin)
+            
+            print(crossroads)
+            
+            XCTAssert(crossroads == target2)
+            
+        } catch is CoincidentLinesError  {
+            XCTAssert(true)
+        } catch {
+            XCTFail()
+        }
+
+
     }
 
     func testResolveRelativePoint()   {
@@ -322,6 +370,56 @@ class LineTests: XCTestCase {
         let comps = refLine.resolveRelative(yonder: trial)
         
         XCTAssert(comps == target)
+    }
+    
+    func testGenBisect()   {
+        
+        let pipA = Point3D(x: 1.0, y: 5.0, z: 2.0)
+        let pipB = Point3D(x: 4.6, y: 5.0, z: 2.0)
+        
+        let dir1 = Vector3D(i: 0.0, j: 0.0, k: 1.0)
+        
+        let targetLoc = Point3D(x: 2.8, y: 5.0, z: 2.0)
+        let targetDir = Vector3D(i: 0.0, j: 1.0, k: 0.0)
+        
+        let targetLine = try! Line(spot: targetLoc, arrow: targetDir)
+        
+        let chop = try! Line.genBisect(ptA: pipA, ptB: pipB, up: dir1)
+        
+        print(chop.getOrigin())
+        print(chop.getDirection())
+        
+        XCTAssert(chop == targetLine)
+        
+        let dir2 = Vector3D(i: 1.0, j: 1.0, k: 0.0)
+        
+        do   {
+            _ = try Line.genBisect(ptA: pipA, ptB: pipB, up: dir2)
+        } catch is NonUnitDirectionError {
+            XCTAssert(true)
+        } catch {
+            XCTFail()
+        }
+
+        
+        let dir3 = Vector3D(i: 0.0, j: 0.0, k: 0.0)
+        
+        do   {
+            _ = try Line.genBisect(ptA: pipA, ptB: pipB, up: dir3)
+        } catch is ZeroVectorError {
+            XCTAssert(true)
+        } catch {
+            XCTFail()
+        }
+
+        do   {
+            _ = try Line.genBisect(ptA: pipA, ptB: pipA, up: dir1)
+        } catch is CoincidentPointsError {
+            XCTAssert(true)
+        } catch {
+            XCTFail()
+        }
+
     }
     
     func testEquals()   {
