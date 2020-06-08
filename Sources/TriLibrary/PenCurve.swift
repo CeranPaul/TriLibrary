@@ -32,9 +32,11 @@ public protocol PenCurve   {
     
     /// Plot the curve.  Your classic example of polymorphism
     /// - SeeAlso:  drawControls() for a Cubic
-    func draw(context: CGContext, tform: CGAffineTransform)
+    func draw(context: CGContext, tform: CGAffineTransform)   // Allowable crown added as a parameter?
     
-       // getLength and intersect are near-term candidates for additional funcs
+    
+    
+       // getLength, transform, reverse, and intersect with a line are near-term candidates for additional funcs
     
     /// Figure how far the point is off the curve, and how far along the curve it is.  Useful for picks  
 //    func resolveRelative(speck: Point3D) -> (along: Double, away: Double)

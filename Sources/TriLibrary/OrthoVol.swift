@@ -277,7 +277,3 @@ func + (lhs: OrthoVol, rhs: OrthoVol) -> OrthoVol   {
     
     return combined
 }
-
-
-
-

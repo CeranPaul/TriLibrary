@@ -280,6 +280,5 @@ class CubicTests: XCTestCase {
             XCTFail()
         }
     }
-    
-    
+        
 }

@@ -1,9 +1,9 @@
 //
 //  LineSeg.swift
-//  SurfaceCrib
+//  CurvPack
 //
 //  Created by Paul on 10/28/15.
-//  Copyright © 2018 Ceran Digital Media. All rights reserved.  See LICENSE.md
+//  Copyright © 2020 Ceran Digital Media. All rights reserved.  See LICENSE.md
 //
 
 import Foundation
@@ -11,8 +11,6 @@ import Foundation
 /// A wire between two points.
 public struct LineSeg: Equatable {
     
-    
-    // Can this be a struct, instead?
     
     // End points
     fileprivate var endAlpha: Point3D   // Private access to limit modification
@@ -23,8 +21,10 @@ public struct LineSeg: Equatable {
     
     public var parameterRange: ClosedRange<Double>
     
+    
     /// Build a line segment from two points
     /// - Throws: CoincidentPointsError
+    /// - See: 'testFidelity' under LineSegTests
     public init(end1: Point3D, end2: Point3D) throws {
         
         guard end1 != end2 else { throw CoincidentPointsError(dupePt: end1)}
@@ -41,19 +41,22 @@ public struct LineSeg: Equatable {
     
     
     /// Fetch the location of an end
-    /// - See: 'getOtherEnd()'
+    /// - SeeAlso: 'getOtherEnd()'
+    /// - See: 'testFidelity' under LineSegTests
     public func getOneEnd() -> Point3D   {
         return endAlpha
     }
     
     /// Fetch the location of the opposite end
-    /// - See: 'getOneEnd()'
+    /// - SeeAlso: 'getOneEnd()'
+    /// - See: 'testFidelity' under LineSegTests
     public func getOtherEnd() -> Point3D   {
         return endOmega
     }
     
     
     /// Attach new meaning to the curve
+    /// - See: 'testSetIntent' under LineSegTests
     public mutating func setIntent(purpose: PenTypes)   {
         
         self.usage = purpose
@@ -66,6 +69,7 @@ public struct LineSeg: Equatable {
     }
     
     /// Flip the order of the end points  Used to align members of a Perimeter
+    /// - See: 'testReverse' under LineSegTests
     public mutating func reverse() -> Void  {
         
         let bubble = self.endAlpha
@@ -76,6 +80,7 @@ public struct LineSeg: Equatable {
     
     /// Move, rotate, and scale by a matrix
     /// - Throws: CoincidentPointsError if it was scaled to be very small
+    /// - See: 'testTransform' under LineSegTests
     public static func transform(xirtam: Transform, wire: LineSeg) throws -> LineSeg {
         
         let tAlpha = Point3D.transform(pip: wire.endAlpha, xirtam: xirtam)
@@ -115,11 +120,16 @@ public struct LineSeg: Equatable {
     }
     
     /// Find the point along this line segment specified by the parameter 't'
-    /// Assumes 0 < t < 1
-    /// - Throws: CoincidentPointsError
-    public func pointAt(t: Double) -> Point3D  {
+    /// Checks that  0 < t < 1
+    /// - Throws:
+    ///     - CoincidentPointsError
+    ///     - ParameterRangeError if the input is lame
+    /// - See: 'testPointAt' under LineSegTests
+    public func pointAt(t: Double) throws -> Point3D  {
         
-        //TODO: Range checking would be good
+        guard self.parameterRange.contains(t) else { throw ParameterRangeError(parA: t) }
+        
+
         let wholeVector = Vector3D.built(from: self.endAlpha, towards: self.endOmega, unit: false)
         
         let scaled = wholeVector * t
@@ -152,6 +162,7 @@ public struct LineSeg: Equatable {
     
     /// Find the position of a point relative to the LineSeg
     /// - Returns: Tuple of vectors - one along the seg, other perp to it
+    /// - See: 'testResolveRelative' under LineSegTests
     public func resolveRelativeVec(speck: Point3D) -> (along: Vector3D, perp: Vector3D)   {
         
         /// Direction of the segment.  Is a unit vector.
@@ -180,10 +191,12 @@ public struct LineSeg: Equatable {
         
         return (a, b)
     }
+    // TODO: Write tests for the above inside LineSegTests
     
     
     /// Calculate length
     /// - Returns: Distance
+    /// - See: 'testLength' under LineSegTests
     func getLength() -> Double   {
         return Point3D.dist(pt1: self.endAlpha, pt2: self.endOmega)
     }
@@ -201,6 +214,7 @@ public struct LineSeg: Equatable {
     /// Some notations show "t" as the parameter, instead of "u"
     /// - Returns:
     ///   - tan:  Non-normalized vector
+    /// - See: 'testTangent' under LineSegTests
     public func tangentAt(t: Double) -> Vector3D   {
         
         let along = Vector3D.built(from: self.endAlpha, towards: self.endOmega)
@@ -215,7 +229,7 @@ public struct LineSeg: Equatable {
     ///   - keepNear: Retain the near or far remnant?
     /// - Warning:  No checks are made to see that stub lies on the segment
     /// - Returns: A new LineSeg
-    /// - Warning:  Does not have a Unit Test
+    /// - See: 'testClipTo' under LineSegTests
     public func clipTo(stub: Point3D, keepNear: Bool) -> LineSeg   {
         
         var freshSeg: LineSeg
@@ -278,12 +292,9 @@ public struct LineSeg: Equatable {
     }
     
     
-
-    
-    
     /// See if another segment crosses this one
     /// Used for seeing if a screen gesture cuts across the current seg
-    /// - Warning:  Does not have a Unit Test
+    /// - See: 'testIsCrossing' under LineSegTests
     public func isCrossing(chop: LineSeg) -> Bool   {
         
         let compsA = self.resolveRelativeVec(speck: chop.endAlpha)
@@ -303,7 +314,25 @@ public struct LineSeg: Equatable {
     }
     
     
+    /// Generate array points suitable for drawing
+    /// - Parameter allowableCrown: Acceptable deviation from the curve
+    /// - Throws: NegativeAccuracyError out of habit.
+    /// - Returns: Array of Point3D
+    public func approximate(allowableCrown: Double) throws -> [Point3D]   {
+        
+        guard allowableCrown > 0.0 else { throw NegativeAccuracyError(acc: allowableCrown) }
+            
+        /// Collection of points to be returned
+        var chain = [Point3D]()
+        
+        chain.append(getOneEnd())
+        chain.append(getOtherEnd())
+        
+        return chain
+    }
+    
     /// Calculate the crown over a small segment
+    /// - See: 'testCrown' under LineSegTests
     public func findCrown(smallerT: Double, largerT: Double) -> Double   {
         return 0.0
     }
@@ -315,6 +344,7 @@ public struct LineSeg: Equatable {
     ///   - currentT:  Present value of the driving parameter
     ///   - increasing:  Whether the change in parameter should be up or down
     /// - Returns: New value for driving parameter
+    /// - See: 'testFindStep' under LineSegTests
     public func findStep(allowableCrown: Double, currentT: Double, increasing: Bool) -> Double   {
         
         var trialT : Double
@@ -328,7 +358,7 @@ public struct LineSeg: Equatable {
         return trialT
     }
     
-    // TODO: This leads one to think that an "isReversed" test would be good.
+    // TODO: An "isReversed" test would be good.
     
     /// Compare each endpoint of the segment.
     /// - Parameters:

@@ -468,4 +468,3 @@ public func * (lhs: Transform, rhs: Transform) -> Transform   {
     
     return Transform(a: resA, b: resB, c: resC, d: resD, e: resE, f: resF, g: resG, h: resH, j: resJ, k: resK, m: resM, n: resN, p: resP, r: resR, s: resS, t: resT)
 }
-

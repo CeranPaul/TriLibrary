@@ -526,6 +526,5 @@ class PlaneTests: XCTestCase {
         XCTAssert(flag)
 
     }
-    
-        
+            
 }

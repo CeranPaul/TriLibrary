@@ -23,6 +23,9 @@ public struct Arc: Equatable   {
     /// Angle covered by the Arc - in radians.  -2pi to 2pi
     var sweepAngle: Double
     
+    /// Limited to be bettween 0.0 and 1.0
+    public var parameterRange: ClosedRange<Double>
+    
     /// The enum that hints at the meaning of the curve
     public var usage: PenTypes
     
@@ -76,6 +79,8 @@ public struct Arc: Equatable   {
         
         self.sweepAngle = sweep
         
+        
+        self.parameterRange = ClosedRange<Double>(uncheckedBounds: (lower: 0.0, upper: 1.0))
         
         self.radius = Point3D.dist(pt1: ctr, pt2: start)
         
@@ -146,6 +151,8 @@ public struct Arc: Equatable   {
             self.sweepAngle = endAngle - Double.pi * 2.0
         }
         
+        self.parameterRange = ClosedRange<Double>(uncheckedBounds: (lower: 0.0, upper: 1.0))
+        
         self.usage = .Ordinary
         
         /// Coordinate system
@@ -159,6 +166,7 @@ public struct Arc: Equatable   {
     
     /// Attach new meaning to the curve
     /// - Parameter: purpose:PenTypes
+    /// - See: 'testSetIntent' under ArcTests
     public mutating func setIntent(purpose: PenTypes)   {
         
         self.usage = purpose
@@ -211,6 +219,7 @@ public struct Arc: Equatable   {
     
     
     /// - Returns: A point in the global CSYS
+    /// - See: 'testPointAt' under ArcTests
     public func pointAt(t: Double) throws -> Point3D   {
         
         guard t >= 0.0 else { throw ParameterRangeError(parA: t) }
@@ -221,6 +230,13 @@ public struct Arc: Equatable   {
         let globalPt = Point3D.transform(pip: localPt, xirtam: self.toGlobal)
         
         return globalPt
+    }
+    
+    /// Figure the arc length
+    public func getLength() -> Double   {
+        
+        let includedAngle = abs(getSweepAngle())
+        return includedAngle * Double.pi
     }
     
     /// Figure the global brick that contains the curve
@@ -251,18 +267,25 @@ public struct Arc: Equatable   {
         return brick
     }
     
-    /// Create only enough points to meet the crown limit
-    /// - Parameter: allowableCrown: Maximum deviation from the actual curve
+    /// Create only enough points for line segments tthat will meet the crown limit.
+    /// - Parameters:
+    ///   - allowableCrown: Maximum deviation from the actual curve
     /// - Returns: Array of evenly spaced points in the local coordinate system
-    public func approximate(allowableCrown: Double) -> [Point3D]   {
+    /// - Throws:
+    ///     - NegativeAccuracyError for an input less than zero
+    public func approximate(allowableCrown: Double) throws -> [Point3D]   {
         
-        //TODO: Add a guard statement to verify that allowable crown is positive
+        guard allowableCrown > 0.0 else { throw NegativeAccuracyError(acc: allowableCrown) }
+            
         
         let ratio = 1.0 - allowableCrown / self.radius
+        
+        /// Step in angle that meets the allowable crown limit
         let maxSwing =  2.0 * acos(ratio)
         
         let count = ceil(abs(self.sweepAngle / maxSwing))
         
+        /// The increment in angle that results in an even number of portions
         let angleStep = self.sweepAngle / count
         
         
@@ -313,7 +336,7 @@ public struct Arc: Equatable   {
 //        }
         
         /// Array of points in the local coordinate system
-        let dots = self.approximate(allowableCrown: 0.001)   //TODO: Make this a variable
+        let dots = try! self.approximate(allowableCrown: 0.001)   //TODO: Make this a variable
         
         let toScreen = { (spot: Point3D) -> CGPoint in
             let global = Point3D.transform(pip: spot, xirtam: self.toGlobal)   // Transform from local to global CSYS

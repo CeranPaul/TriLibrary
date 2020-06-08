@@ -1,6 +1,6 @@
 //
 //  Cubic.swift
-//  SketchCurves
+//  CurvPack
 //
 //  Created by Paul on 12/14/15.
 //  Copyright © 2018 Ceran Digital Media. See LICENSE.md
@@ -489,12 +489,14 @@ open class Cubic: PenCurve   {
     /// - Throws:
     ///     - NegativeAccuracyError for bad allowable crown
     ///     - ParameterRangeError if currentT is lame
-    /// This needs testing for boundary conditions and the decreasing flag condition.
+    ///     - ConvergenceError if no new value can be found
     public func findStep(allowableCrown: Double, currentT: Double, increasing: Bool) throws -> Double   {
         
         guard allowableCrown > 0.0 else { throw NegativeAccuracyError(acc: allowableCrown) }
             
         guard self.parameterRange.contains(currentT) else { throw ParameterRangeError(parA: currentT) }
+
+        //TODO: This needs testing for boundary conditions and the decreasing flag condition.
 
         /// How quickly to refine the parameter guess
         let factor = 1.25
@@ -535,8 +537,9 @@ open class Cubic: PenCurve   {
             safety += 1
             
         }  while deviation > allowableCrown  && safety < 12    // Fails ugly!
-        // TODO: Throw a ConvergenceError here if safety > 11
         
+        if safety > 11 { throw ConvergenceError(tnuoc: safety) }
+
         return trialT
     }
     
@@ -591,6 +594,57 @@ open class Cubic: PenCurve   {
         let deviation = try! Cubic.crownCalcs(dots: crownDots)
         return deviation
     }
+    
+    /// Calculate deviation from a LineSeg
+    /// - Parameters:
+    ///   - dots:  Array of Point3D.  Order is assumed.
+    /// - Throws:
+    ///     - TinyArrayError if less than three points are passed in
+    ///     - CoincidentPointsError if first and last points are not different
+    /// - Returns: Maximum separation.
+    public static func crownCalcs(dots: [Point3D]) throws -> Double   {
+        
+        guard dots.count > 2 else { throw TinyArrayError(tnuoc: dots.count)}
+        
+        let baseline = try LineSeg(end1: dots.first!, end2: dots.last!)
+        
+        let seps = dots.map( { baseline.resolveRelative(speck: $0).away } )
+        let curCrown = seps.max()!
+        
+        return curCrown
+    }
+    
+    /// Generate a series of points along the curve that meet the crown criteria
+    /// - Parameters:
+    ///   - allowableCrown: Maximum deviation from the actual curve
+    /// - Returns: Array of points evenly spaced to comply with the crown parameter
+    /// - Throws:
+    ///   - NegativeAccuracyError for an input less than zero
+    ///   - ParameterRangeError if things go awry
+    ///   - ConvergenceError in bizarre cases
+    public func approximate(allowableCrown: Double) throws -> [Point3D]   {
+        
+        guard allowableCrown > 0.0 else { throw NegativeAccuracyError(acc: allowableCrown) }
+            
+        //TODO: This needs to be tested for the degenerate case of the Cubic being the same as a LineSeg.
+        
+        /// Collection of points to be returned
+        var chain = [Point3D]()
+        
+        var currentT = 0.0   // Starting value
+        let startPoint = try self.pointAt(t: currentT)
+        chain.append(startPoint)
+        
+        while currentT < 1.0   {
+            let primoT = try findStep(allowableCrown: allowableCrown, currentT: currentT, increasing: true)
+            let milestone = try self.pointAt(t: primoT)
+            chain.append(milestone)
+            currentT = primoT
+        }
+        
+        return chain
+    }
+    
     
     /// Find the curve's closest point.
     /// - Parameters:
@@ -704,24 +758,6 @@ open class Cubic: PenCurve   {
         }
         
         return tighter
-    }
-    
-    
-    /// Caluclate deviation from a LineSeg
-    /// - Parameters:
-    ///   - dots:  Array of Point3D.  Order is assumed.
-    /// - Returns: Maximum separation.
-    /// Does not check for an Array length < 3
-    public static func crownCalcs(dots: [Point3D]) throws -> Double   {
-        
-        guard dots.count > 2 else { throw TinyArrayError(tnuoc: dots.count)}
-        
-        let bar = try! LineSeg(end1: dots.first!, end2: dots.last!)
-        
-        let seps = dots.map( { bar.resolveRelative(speck: $0).away } )
-        let curCrown = seps.max()!
-        
-        return curCrown
     }
     
     
