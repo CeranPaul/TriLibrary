@@ -234,7 +234,7 @@ public struct OrthoVol   {
         source.append(sourceH)
         
            // Transform the array of eight points
-        let tformed = source.map( { Point3D.transform(pip: $0, xirtam: xirtam) } )
+        let tformed = source.map( { $0.transform(xirtam: xirtam) } )
         
            // Find the min and max in each axis
         let sortMinX = tformed.sorted(by: { return $0.x < $1.x } )

@@ -54,7 +54,7 @@ class LineSegTests: XCTestCase {
         
         let slash = try! LineSeg(end1: pt1, end2: pt2)
         
-        let ladybug = slash.pointAt(t: 0.6)
+        let ladybug = try! slash.pointAt(t: 0.6)
         
         let home = Point3D(x: 3.4, y: 3.4, z: 3.4)
         
@@ -108,7 +108,7 @@ class LineSegTests: XCTestCase {
         let pitched = try! LineSeg(end1: targetOne, end2: targetAnother)
         
         let swingZ = Transform(rotationAxis: Axis.z, angleRad: Double.pi / 2.0)
-        let swung = try! LineSeg.transform(xirtam: swingZ, wire: pristine)
+        let swung = try! pristine.transform(xirtam: swingZ) as! LineSeg
         
         XCTAssert(swung == pitched)
                 

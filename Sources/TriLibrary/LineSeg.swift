@@ -9,7 +9,7 @@
 import Foundation
 
 /// A wire between two points.
-public struct LineSeg: Equatable {
+public struct LineSeg: PenCurve, Equatable {
     
     
     // End points
@@ -80,20 +80,19 @@ public struct LineSeg: Equatable {
     
     /// Move, rotate, and scale by a matrix
     /// - Throws: CoincidentPointsError if it was scaled to be very small
-    /// - See: 'testTransform' under LineSegTests
-    public static func transform(xirtam: Transform, wire: LineSeg) throws -> LineSeg {
+    public func transform(xirtam: Transform) throws -> PenCurve {
         
-        let tAlpha = Point3D.transform(pip: wire.endAlpha, xirtam: xirtam)
-        let tOmega = Point3D.transform(pip: wire.endOmega, xirtam: xirtam)
+        let tAlpha = endAlpha.transform(xirtam: xirtam)
+        let tOmega = endOmega.transform(xirtam: xirtam)
         
         var transformed = try LineSeg(end1: tAlpha, end2: tOmega)   // Will generate a new extent
-        transformed.setIntent(purpose: wire.usage)   // Copy setting instead of having the default
+        transformed.setIntent(purpose: self.usage)   // Copy setting instead of having the default
         
         return transformed
     }
+    
+    
 
-    
-    
     /// Flip line segment to the opposite side of the plane
     /// - Parameters:
     ///   - flat:  Mirroring plane
@@ -144,7 +143,8 @@ public struct LineSeg: Equatable {
     /// - Parameters:
     ///   - context: In-use graphics framework
     ///   - tform:  Model-to-display transform
-    public func draw(context: CGContext, tform: CGAffineTransform)  {
+    ///   - allowableCrown: Maximum deviation from the actual curve. Ignored for this struct.
+    public func draw(context: CGContext, tform: CGAffineTransform, allowableCrown: Double) throws   {
         
         context.beginPath()
         

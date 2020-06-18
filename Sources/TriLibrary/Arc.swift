@@ -1,20 +1,20 @@
 //
 //  Arc.swift
-//  ArcHammer
+//  CurvPack
 //
-//  Created by Paul Hollingshead on 8/24/19.
-//  Copyright © 2019 Paul Hollingshead. All rights reserved.
+//  Created by Paul on 8/24/19.
+//  Copyright © 2020 Ceran Digital Media. All rights reserved.  See LICENSE.md
 //
 
 import Foundation
 
 /// Can represent a portion, or a complete circle
-public struct Arc: Equatable   {
+public struct Arc: PenCurve, Equatable   {
     
     /// Anchor point for swinging
     var center: Point3D
     
-    /// Direction perpendicular to resulting Arc
+    /// Direction perpendicular to plane of the Arc
     var axis: Vector3D
     
     /// Where the Arc begins
@@ -50,7 +50,7 @@ public struct Arc: Equatable   {
     /// - Throws:
     ///   - NonUnitDirectionError for a bad set of inputs
     ///   - NonOrthogonalPointError
-    ///   - ParameterRangeError
+    ///   - ParameterRangeError for a bad sweep value
     /// - See: 'testFidelityCASS' under ArcTests
     init(ctr: Point3D, axis: Vector3D, start: Point3D, sweep: Double) throws   {
         
@@ -188,7 +188,7 @@ public struct Arc: Equatable   {
     public func getOtherEnd() -> Point3D   {
         
         let localPt = self.pointAtAngle(theta: self.sweepAngle)
-        let globalEnd = Point3D.transform(pip: localPt, xirtam: self.toGlobal)
+        let globalEnd = localPt.transform(xirtam: self.toGlobal)
         return globalEnd
     }
     
@@ -227,7 +227,7 @@ public struct Arc: Equatable   {
         
         let ratioedAngle = self.sweepAngle * t
         let localPt = self.pointAtAngle(theta: ratioedAngle)
-        let globalPt = Point3D.transform(pip: localPt, xirtam: self.toGlobal)
+        let globalPt = localPt.transform(xirtam: self.toGlobal)
         
         return globalPt
     }
@@ -252,7 +252,7 @@ public struct Arc: Equatable   {
         for g in 0...Int(divs)   {
             let theta = Double(g) * sweepInc
             let localPip = self.pointAtAngle(theta: theta)
-            let globalPip = Point3D.transform(pip: localPip, xirtam: self.toGlobal)
+            let globalPip = localPip.transform(xirtam: self.toGlobal)
             droplets.append(globalPip)
         }
         
@@ -306,13 +306,13 @@ public struct Arc: Equatable   {
     
 
     /// Untested version
-    public func transform(xirtam: Transform) throws -> Arc {
+    public func transform(xirtam: Transform) throws -> PenCurve {
         
-        let freshCtr = Point3D.transform(pip: self.center, xirtam: xirtam)
+        let freshCtr = self.center.transform(xirtam: xirtam)
         
         let freshDir = Vector3D.transform(thataway: self.axis, xirtam: xirtam)
         
-        let freshStart = Point3D.transform(pip: self.startPt, xirtam: xirtam)
+        let freshStart = self.startPt.transform(xirtam: xirtam)
         
         
         let fresh = try Arc(ctr: freshCtr, axis: freshDir, start: freshStart, sweep: self.sweepAngle)
@@ -321,25 +321,33 @@ public struct Arc: Equatable   {
     }
     
         
+    /// Same start and end, but different direction. Used to align members of a Loop
+    public mutating func reverse() -> Void  {
+        
+        let oldFinish = self.getOtherEnd()
+        let freshSweep = -1.0 * self.sweepAngle
+        
+        self.startPt = oldFinish
+        self.sweepAngle = freshSweep
+    }
+    
     /// Plot the circle segment.  This will be called by the UIView 'drawRect' function
     /// - Parameters:
     ///   - context: In-use graphics framework
     ///   - tform:  Model-to-display transform
-    public func draw(context: CGContext, tform: CGAffineTransform) -> Void  {
+    ///   - allowableCrown: Maximum deviation from the actual curve
+    /// - Throws:
+    ///     - NegativeAccuracyError for a bad input
+    public func draw(context: CGContext, tform: CGAffineTransform, allowableCrown: Double) throws -> Void  {
+        
+        guard allowableCrown > 0.0 else { throw NegativeAccuracyError(acc: allowableCrown) }
+            
+        /// Array of points in the local coordinate system
+        let dots = try! self.approximate(allowableCrown: allowableCrown)
         
         /// Closure to generate a point for display
-//        let toScreen:(Point3D) ->CGPoint  = { pip in
-//            let global = self.toGlobal.alter(pip: pip)   // Transform from local to global CSYS
-//            let asCG = CGPoint(x: global.x, y: global.y)   // Make a CGPoint
-//            let onScreen = asCG.applying(tform)   // Shift and scale for screen
-//            return onScreen
-//        }
-        
-        /// Array of points in the local coordinate system
-        let dots = try! self.approximate(allowableCrown: 0.001)   //TODO: Make this a variable
-        
         let toScreen = { (spot: Point3D) -> CGPoint in
-            let global = Point3D.transform(pip: spot, xirtam: self.toGlobal)   // Transform from local to global CSYS
+            let global = spot.transform(xirtam: self.toGlobal)   // Transform from local to global CSYS
             let asCG = CGPoint(x: global.x, y: global.y)   // Make a CGPoint
             let onScreen = asCG.applying(tform)   // Shift and scale for screen
             return onScreen

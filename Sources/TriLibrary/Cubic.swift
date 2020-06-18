@@ -3,7 +3,7 @@
 //  CurvPack
 //
 //  Created by Paul on 12/14/15.
-//  Copyright © 2018 Ceran Digital Media. See LICENSE.md
+//  Copyright © 2020 Ceran Digital Media. All rights reserved.  See LICENSE.md
 //
 
 import Foundation
@@ -19,7 +19,7 @@ import simd
 
 /// Curve defined by polynomials for each coordinate direction.
 /// Parameter must fall within the range of 0.0 to 1.0.
-open class Cubic: PenCurve   {
+public struct Cubic: PenCurve   {
         
     var ax: Double
     var bx: Double
@@ -43,7 +43,7 @@ open class Cubic: PenCurve   {
     var ptOmega: Point3D
     
     /// The enum that hints at the meaning of the curve
-    open var usage: PenTypes
+    public var usage: PenTypes
     
     /// Limited to be bettween 0.0 and 1.0
     public var parameterRange: ClosedRange<Double>
@@ -256,9 +256,63 @@ open class Cubic: PenCurve   {
     }
     
     
+    /// Generate the 12 coefficiients that define the curve
+    private mutating func genCoeff(alpha: Point3D, beta: Point3D, betaFraction: Double, gamma: Point3D, gammaFraction: Double, delta: Point3D) -> Void   {
+        
+        // Rearrange coordinates into an array
+        let rowX = SIMD4<Double>(alpha.x, beta.x, gamma.x, delta.x)
+        let rowY = SIMD4<Double>(alpha.y, beta.y, gamma.y, delta.y)
+        let rowZ = SIMD4<Double>(alpha.z, beta.z, gamma.z, delta.z)
+        
+        // Build a 4x4 of parameter values to various powers
+        let row1 = SIMD4<Double>(0.0, 0.0, 0.0, 1.0)
+        
+        let betaFraction2 = betaFraction * betaFraction
+        let row2 = SIMD4<Double>(betaFraction * betaFraction2, betaFraction2, betaFraction, 1.0)
+        
+        let gammaFraction2 = gammaFraction * gammaFraction
+        let row3 = SIMD4<Double>(gammaFraction * gammaFraction2, gammaFraction2, gammaFraction, 1.0)
+        
+        let row4 = SIMD4<Double>(1.0, 1.0, 1.0, 1.0)
+        
+        
+        /// Intermediate collection for building the matrix
+        var partial: [SIMD4<Double>]
+        partial = [row1, row2, row3, row4]
+        
+        /// Matrix of t from several points raised to various powers
+        let tPowers = double4x4(partial)
+        
+        let trans = tPowers.transpose   // simd representation is different than what I had in college
+        
+        
+        /// Inverse of the above matrix
+        let nvers = trans.inverse
+        
+        let coeffX = nvers * rowX
+        let coeffY = nvers * rowY
+        let coeffZ = nvers * rowZ
+        
+        
+        // Set the curve coefficients
+        self.ax = coeffX[0]
+        self.bx = coeffX[1]
+        self.cx = coeffX[2]
+        self.dx = coeffX[3]
+        self.ay = coeffY[0]
+        self.by = coeffY[1]
+        self.cy = coeffY[2]
+        self.dy = coeffY[3]
+        self.az = coeffZ[0]
+        self.bz = coeffZ[1]
+        self.cz = coeffZ[2]
+        self.dz = coeffZ[3]
+        
+    }
+    
     /// Attach new meaning to the curve.
     /// - See: 'testSetIntent' under CubicTests
-    public func setIntent(purpose: PenTypes) -> Void  {
+    public mutating func setIntent(purpose: PenTypes) -> Void  {
         self.usage = purpose
     }
     
@@ -304,7 +358,7 @@ open class Cubic: PenCurve   {
     /// Differentiate to find the tangent vector for the input parameter.
     /// Some notations show "u" as the parameter, instead of "t".
     /// - Parameters:
-    ///   - t:  Curve parameter value.  Assumed 0 < t < 1.
+    ///   - t:  Curve parameter value.  Checked to be 0 < t < 1.
     /// - Returns:  Non-normalized vector
     /// - Throws:
     ///     - ParameterRangeError if the input is lame
@@ -326,10 +380,14 @@ open class Cubic: PenCurve   {
     /// Break into 20 pieces and sum up the distances
     /// - Parameters:
     ///   - t:  Optional curve parameter value.  Assumed 0 < t < 1.
+    /// - Throws:
+    ///     - ParameterRangeError if the input is lame
     /// - Returns: Double that is an approximate length
-    /// Should bail if t = 0.0
-    public func findLength(t: Double = 1.0) -> Double   {
+    public func findLength(t: Double = 1.0) throws -> Double   {
         
+        guard self.parameterRange.contains(t) else { throw ParameterRangeError(parA: t) }
+        
+
         let pieces = 20
         let step = t / Double(pieces)
         
@@ -351,7 +409,49 @@ open class Cubic: PenCurve   {
     }
     
     
+    /// Create a new curve translated, scaled, and rotated by the matrix.
+    /// - Parameters:
+    ///   - xirtam: Matrix containing translation, rotation, and scaling to be applied
+    /// - See: 'testTransform' under CubicTests
+    public func transform(xirtam: Transform) -> PenCurve   {
+        
+        let tAlpha = self.ptAlpha.transform(xirtam: xirtam)
+        let tOmega = self.ptOmega.transform(xirtam: xirtam)
+        
+        let t1 = 0.33
+        let betaLoc = try! self.pointAt(t: t1)
+        let beta = betaLoc.transform(xirtam: xirtam)
+
+        let t2 = 0.67
+        let gammaLoc = try! self.pointAt(t: t2)
+        let gamma = gammaLoc.transform(xirtam: xirtam)
+
+        
+        var fresh = try! Cubic(alpha: tAlpha, beta: beta, betaFraction: t1, gamma: gamma, gammaFraction: t2, delta: tOmega)
+        fresh.setIntent(purpose: self.usage)   // Copy setting instead of having the default
+        
+        return fresh
+    }
     
+    
+    /// Flip the order of the end points (and control points).  Used to align members of a Loop.
+    public mutating func reverse() -> Void  {
+        
+        let freshDelta = self.ptAlpha
+        let freshAlpha = self.ptOmega
+        
+        let freshBeta = try! self.pointAt(t: 0.70)
+        let freshGamma = try! self.pointAt(t: 0.35)
+        
+        self.genCoeff(alpha: freshAlpha, beta: freshBeta, betaFraction: 0.30, gamma: freshGamma, gammaFraction: 0.65, delta: freshDelta)
+        
+        self.ptAlpha = freshAlpha
+        self.ptOmega = freshDelta
+        
+    }
+    
+    
+
     /// Calculate the proper surrounding box
     /// Increase the number of intermediate points as necessary
     /// This same techniques could be used for other parametric curves
@@ -425,16 +525,25 @@ open class Cubic: PenCurve   {
             
         }
         
-        
         let box = OrthoVol(minX: minX, maxX: maxX, minY: minY, maxY: maxY, minZ: minZ, maxZ: maxZ)
         
         return box
     }
     
-    
-    
-    
-    
+     /// Break the curve up into 100 segments. Used for equality checks.
+    /// - Returns: Array of Point3D.
+    public func dice() -> [Point3D]   {
+        
+        /// The array to be returned
+        var pearls = [Point3D]()
+        
+        for g in stride(from: 0.0, through: 1.0, by: 0.01)   {
+            let pip = try! self.pointAt(t: g)
+            pearls.append(pip)
+        }
+        
+        return pearls
+    }
     
     
     /// Find the position of a point relative to the curve and its origin.
@@ -455,8 +564,7 @@ open class Cubic: PenCurve   {
     }
         
     
-    /// Generate even parameter values.
-    /// Needs to be copied to SketchCurves
+    /// Generate even intervals by parameter value.
     /// - Parameters:
     ///   - divs: Number of intervals
     /// - Returns: divs + 1 parameter values
@@ -765,33 +873,33 @@ open class Cubic: PenCurve   {
     /// - Parameters:
     ///   - context: In-use graphics framework
     ///   - tform:  Model-to-display transform
-    public func draw(context: CGContext, tform: CGAffineTransform) -> Void  {
+    ///   - allowableCrown: Maximum deviation from the actual curve
+    /// - Throws:
+    ///     - NegativeAccuracyError for a bad input
+    public func draw(context: CGContext, tform: CGAffineTransform, allowableCrown: Double) throws -> Void  {
         
-        let xCG: CGFloat = CGFloat(self.dx)    // Build the starting point from the raw parameters
-        let yCG: CGFloat = CGFloat(self.dy)
-        
-        let startModel = CGPoint(x: xCG, y: yCG)
-        let screenStart = startModel.applying(tform)
-        
-        context.move(to: screenStart)
-        
-        
-        let pieces = 20   // This really should depend on the curvature
-        let step = 1.0 / Double(pieces)
-        
-        for g in 1...pieces   {
+        guard allowableCrown > 0.0 else { throw NegativeAccuracyError(acc: allowableCrown) }
             
-            let stepU = Double(g) * step
-            let mid = try! pointAt(t: stepU)
-            
-            let midPoint = Point3D.makeCGPoint(pip: mid)    // Throw out Z coordinate
-            let screenMid = midPoint.applying(tform)
-            
-            context.addLine(to: screenMid)
+        /// Array of points in the local coordinate system
+        let dots = try! self.approximate(allowableCrown: allowableCrown)
+        
+        /// Closure to generate a point for display
+        let toScreen = { (spot: Point3D) -> CGPoint in
+            let asCG = CGPoint(x: spot.x, y: spot.y)   // Make a CGPoint
+            let onScreen = asCG.applying(tform)   // Shift and scale for screen
+            return onScreen
+        }
+        
+        let screenDots = dots.map( { toScreen($0) } )
+        
+        
+        context.move(to: screenDots.first!)
+        
+        for index in 1..<screenDots.count   {
+            context.addLine(to: screenDots[index])
         }
         
         context.strokePath()
-        
     }
     
 }

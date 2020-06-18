@@ -87,7 +87,7 @@ class TransformTests: XCTestCase {
         
         let tform = Transform(deltaX: -2.0, deltaY: 3.0, deltaZ: 1.5)
         
-        let trial = Point3D.transform(pip: source, xirtam: tform)
+        let trial = source.transform(xirtam: tform)
         
         XCTAssertEqual(trial.x, -1.0)
         XCTAssertEqual(trial.y, 8.0)
@@ -102,7 +102,7 @@ class TransformTests: XCTestCase {
         
         let shrink = Transform(scaleX: 0.8, scaleY: -0.5, scaleZ: 1.4)
         
-        let trial = Point3D.transform(pip: source, xirtam: shrink)
+        let trial = source.transform(xirtam: shrink)
         
         XCTAssertEqual(trial.x, 4.0)
         XCTAssertEqual(trial.y, 2.5)
@@ -216,13 +216,13 @@ class TransformTests: XCTestCase {
         
         
         let local1 = Point3D(x: 5.0, y: 4.0, z: 3.0)
-        let global1 = Point3D.transform(pip: local1, xirtam: dino)
+        let global1 = local1.transform(xirtam: dino)
         
         XCTAssert(global1.x == 6.0)
         XCTAssert(global1.y == 6.0)
         XCTAssert(global1.z == 6.0)
         
-        let local2 = Point3D.transform(pip: global1, xirtam: betty)
+        let local2 = global1.transform(xirtam: betty)
         
         XCTAssert(local2 == local1)
         

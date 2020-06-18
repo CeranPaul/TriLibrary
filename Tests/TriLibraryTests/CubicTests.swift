@@ -201,6 +201,70 @@ class CubicTests: XCTestCase {
         XCTAssertEqual(beta.z, sumZ, accuracy: 0.0001)
     }
     
+    func testTransform100()   {
+        
+        let pt1 = Point3D(x: 2.0, y: 0.5, z: 4.0)
+        let pt2 = Point3D(x: 2.0, y: 1.0, z: 2.0)
+        let pt2Fraction = 0.38
+        let pt3 = Point3D(x: 2.0, y: 2.0, z: 0.75)
+        let pt3Fraction = 0.72
+        let pt4 = Point3D(x: 2.0, y: 3.5, z: 0.5)
+        
+        let waist = try! Cubic(alpha: pt1, beta: pt2, betaFraction: pt2Fraction, gamma: pt3, gammaFraction: pt3Fraction, delta: pt4)
+
+        let nose = waist.dice()
+        
+           // Try out the transform function of a Cubic
+        let swing = Transform(rotationAxis: Axis.z, angleRad: Double.pi / 3.0)
+
+        let hokie = waist.transform(xirtam: swing) as! Cubic
+
+        let pokie = hokie.dice()
+        
+        var diff = [Double]()
+        
+        for g in 0..<pokie.count   {
+            let erocks = nose[g].transform(xirtam: swing)
+            let delta = Point3D.dist(pt1: pokie[g], pt2: erocks)
+            diff.append(delta)
+        }
+
+        let whitney = diff.max()!
+        XCTAssert(whitney < Point3D.Epsilon)
+        
+    }
+    
+    func testReverse()   {
+        
+        let pt1 = Point3D(x: 2.0, y: 0.5, z: 4.0)
+        let pt2 = Point3D(x: 2.0, y: 1.0, z: 2.0)
+        let pt2Fraction = 0.38
+        let pt3 = Point3D(x: 2.0, y: 2.0, z: 0.75)
+        let pt3Fraction = 0.72
+        let pt4 = Point3D(x: 2.0, y: 3.5, z: 0.5)
+        
+        var waist = try! Cubic(alpha: pt1, beta: pt2, betaFraction: pt2Fraction, gamma: pt3, gammaFraction: pt3Fraction, delta: pt4)
+
+        let nose = waist.dice()
+        
+        waist.reverse()
+        
+        let tail = waist.dice()
+        let backwards = [Point3D](tail.reversed())
+        
+        var diff = [Double]()
+        
+        for g in 0..<backwards.count   {
+            let delta = Point3D.dist(pt1: nose[g], pt2: backwards[g])   // Will always be positive
+            diff.append(delta)
+        }
+        
+        let acme = diff.max()!
+        
+        XCTAssert(acme < Point3D.Epsilon)
+        
+    }
+    
     func testExtent()   {
         
         let alpha = Point3D(x: -2.3, y: 1.5, z: 0.7)

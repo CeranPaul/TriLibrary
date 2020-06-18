@@ -68,9 +68,9 @@ public struct Point3D: Hashable {
     /// - Parameters:
     ///   - xirtam:  Matrix for the intended transformation
     /// - SeeAlso:  offset
-    public static func transform(pip: Point3D, xirtam: Transform) -> Point3D {
+    public func transform(xirtam: Transform) -> Point3D {
         
-        let pip4 = RowMtx4(valOne: pip.x, valTwo: pip.y, valThree: pip.z, valFour: 1.0)
+        let pip4 = RowMtx4(valOne: self.x, valTwo: self.y, valThree: self.z, valFour: 1.0)
         let tniop4 = pip4 * xirtam
         
         let transformed = tniop4.toPoint()
