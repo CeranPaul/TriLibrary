@@ -197,7 +197,7 @@ public struct LineSeg: PenCurve, Equatable {
     /// Calculate length
     /// - Returns: Distance
     /// - See: 'testLength' under LineSegTests
-    func getLength() -> Double   {
+    public func getLength() -> Double   {
         return Point3D.dist(pt1: self.endAlpha, pt2: self.endOmega)
     }
     
@@ -250,7 +250,7 @@ public struct LineSeg: PenCurve, Equatable {
     ///   - accuracy:  How close is close enough?
     /// - Returns: Possibly empty Array of points common to both curves
     /// - See: 'testIntersectLine' under LineSegTests
-    public func intersect(ray: Line, accuracy: Double = Point3D.Epsilon) -> [Point3D] {
+    public func intersect(ray: Line, accuracy: Double = Point3D.Epsilon) -> [Point3D]   {
         
         /// The return array
         var crossings = [Point3D]()

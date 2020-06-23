@@ -331,6 +331,94 @@ public struct Arc: PenCurve, Equatable   {
         self.sweepAngle = freshSweep
     }
     
+    /// Should return 0, 1, or 2 points
+    public func intersect(ray: Line, accuracy: Double = Point3D.Epsilon) throws -> [Point3D]   {
+        
+        guard accuracy > 0.0 else { throw NegativeAccuracyError(acc: accuracy) }
+                    
+        /// Intersection points. The return array.
+        var crossings = [Point3D]()
+        
+        /// Variable for comparison with the trigonometric results
+        var sweepRange: ClosedRange<Double>
+        
+        if self.sweepAngle > 0.0   {
+            sweepRange = ClosedRange(uncheckedBounds: (lower: 0.0, upper: self.sweepAngle))
+        } else {
+            sweepRange = ClosedRange(uncheckedBounds: (lower: self.sweepAngle, upper: 0.0))
+        }
+        
+        /// Distances along and perpendicular to the Line to a point closest to the Arc center.
+        let legs = ray.resolveRelative(yonder: self.center)
+        if legs.perp > self.radius { return crossings }
+        
+        var projection = Vector3D.dotProduct(lhs: self.axis, rhs: ray.getDirection())
+        if projection > Vector3D.EpsilonV { return crossings }
+        
+        
+           // For the case of the line being parallel and offset to the plane of the circle.
+        let bridge = Vector3D.built(from: ray.getOrigin(), towards: self.getCenter(), unit: true)
+        projection = Vector3D.dotProduct(lhs: bridge, rhs: self.axis)
+        
+        if abs(projection) > 0.0   { return crossings }
+        
+        
+        var jump = ray.getDirection() * legs.along
+        
+        /// Point on the line that is closest to the Arc center.
+        let lineNearest = Point3D.offset(pip: ray.getOrigin(), jump: jump)
+        
+        /// Distance along the line to potential intersection points.
+        let component = sqrt(self.radius * self.radius - legs.perp * legs.perp)
+        
+        jump = ray.getDirection() * component
+        let possible1 = Point3D.offset(pip: lineNearest, jump: jump)
+        
+        let poss1Loc = possible1.transform(xirtam: self.fromGlobal)
+        let theta1 = atan2(poss1Loc.y, poss1Loc.x)   // Be careful with the range of the result!
+        
+        /// Closure to determine if the possible point is on the used portion of the Arc.
+        let isCrossing: (Double) -> Bool = { theta in
+            var flag: Bool = false
+            
+            if abs(self.sweepAngle) <= Double.pi   {
+                if sweepRange.contains(theta)   { flag = true }
+            } else {    // sweepAngle > Double.pi
+                if self.sweepAngle < 0.0   {
+                    if theta >= 0.0   {
+                        flag = sweepRange.contains(theta - 2.0 * Double.pi)
+                    }  else  {
+                        flag = sweepRange.contains(theta)
+                    }
+                }  else  {
+                    if theta < 0.0   {
+                        flag = sweepRange.contains(theta + 2.0 * Double.pi)
+                    }  else  {
+                        flag = sweepRange.contains(theta)
+                    }
+                }
+            }
+            
+            return flag
+        }
+        
+        var keepFlag = isCrossing(theta1)
+        if keepFlag { crossings.append(possible1) }
+
+        
+        jump = jump.reverse()
+        let possible2 = Point3D.offset(pip: lineNearest, jump: jump)
+
+        let poss2Loc = possible2.transform(xirtam: self.fromGlobal)
+        let theta2 = atan2(poss2Loc.y, poss2Loc.x)   // Be careful with the range of the result!
+        
+        keepFlag = isCrossing(theta2)
+        if keepFlag { crossings.append(possible2) }
+
+        return crossings
+    }
+        
+
     /// Plot the circle segment.  This will be called by the UIView 'drawRect' function
     /// - Parameters:
     ///   - context: In-use graphics framework

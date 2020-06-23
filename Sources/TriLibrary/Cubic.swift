@@ -377,6 +377,23 @@ public struct Cubic: PenCurve   {
         return Vector3D(i: myI, j: myJ, k: myK)    // Notice that this is not normalized!
     }
     
+    
+    /// Report the length of the entire curve.
+    public func getLength() -> Double   {
+        
+        let dots = self.dice()
+        
+        var total = 0.0
+        
+        for g in 1..<dots.count   {
+            let hop = Point3D.dist(pt1: dots[g - 1], pt2: dots[g])
+            total += hop
+        }
+        
+        return total
+    }
+    
+
     /// Break into 20 pieces and sum up the distances
     /// - Parameters:
     ///   - t:  Optional curve parameter value.  Assumed 0 < t < 1.
@@ -554,8 +571,6 @@ public struct Cubic: PenCurve   {
     /// - SeeAlso:  resolveRelativeNum()
     public func resolveRelativeVec(speck: Point3D) -> (along: Vector3D, perp: Vector3D)   {
         
-//        let otherSpeck = speck
-        
         let alongVector = Vector3D(i: 1.0, j: 0.0, k: 0.0)
         
         let perpVector = Vector3D(i: 0.0, j: 1.0, k: 0.0)
@@ -564,6 +579,158 @@ public struct Cubic: PenCurve   {
     }
         
     
+    /// Find the projection of difference vectors.
+    /// - Parameters:
+    ///   - span:  Parameter range to be checked
+    ///   - ray:  The Line to be used for intersecting
+    /// - Returns: Projection - negative if crossing, zero if one point lies on the line. Such as at the vertex of a shape.
+    func doesCross(span: ClosedRange<Double>, ray: Line) -> Double   {
+        
+        // Add a check for a really small parameter range?
+        
+        /// Closure to develop a vector off the line towards the point.
+        let jumpDir: (Double) -> Vector3D = { t in
+            
+            let pip = try! self.pointAt(t: t)
+            let components = ray.resolveRelativeVec(yonder: pip)
+            return components.perp
+        }
+        
+        let diffVecNear = jumpDir(span.lowerBound)
+        let diffVecFar = jumpDir(span.upperBound)
+        
+        let projection = Vector3D.dotProduct(lhs: diffVecNear, rhs: diffVecFar)
+        
+        return projection
+    }
+    
+    
+    /// Intersection points with a line.
+    /// Needs to be a thread safe function.
+    /// - Parameters:
+    ///   - ray:  The Line to be used for intersecting
+    ///   - accuracy:  Optional - How close is close enough?
+    /// - Returns: Array of points common to both curves - though for now it will return only the first one
+    /// - SeeAlso:  crossing()
+    /// - See: 'testIntLine1' and 'testIntLine2' under CubicTests
+    public func intersect(ray: Line, accuracy: Double = Point3D.Epsilon) throws -> [Point3D] {
+        
+        guard accuracy > 0.0 else { throw NegativeAccuracyError(acc: accuracy) }
+                    
+        //TODO: Don't forget the nearly tangent case and comparing tangent vectors.
+        
+        /// The return array
+        var crossings = [Point3D]()
+        
+        /// Interval in parameter space for hunting
+        let shebang = ClosedRange<Double>(uncheckedBounds: (lower: 0.0, upper: 1.0))
+        
+        /// Small set of narrow ranges where crossings have been found.
+        let targets = crossing(ray: ray, span: shebang, chunks: 100)
+        
+        for narrowRange in targets   {
+            
+            if let onecross = try converge(ray: ray, span: narrowRange, accuracy: accuracy, layersRemaining: 8)   {
+                crossings.append(onecross)
+            }
+        }
+        
+        return crossings
+    }
+    
+
+    /// Could return 0, 1, 2, or 3 smaller ranges
+    public func crossing(ray: Line, span: ClosedRange<Double>, chunks: Int) -> [ClosedRange<Double>]   {
+        
+        var targetRanges = [ClosedRange<Double>]()
+        
+        let increment = (span.upperBound - span.lowerBound) / Double(chunks)
+        
+        /// Working array of smaller intervals
+        var chopped = [ClosedRange<Double>]()
+        
+        /// Lower bound for the current range
+        var priorT = 0.0
+        
+        for g in 1...chunks   {
+            let freshT = span.lowerBound + Double(g) * increment
+            let bittyRange = ClosedRange<Double>(uncheckedBounds: (lower: priorT, upper: freshT))
+            chopped.append(bittyRange)
+            
+            priorT = freshT   // Prepare for the next iteration
+        }
+        
+        let traffic = chopped.map( { doesCross(span: $0, ray: ray) })
+        
+        for g in 0..<chunks   {
+            if traffic[g] <= 0.0   { targetRanges.append(chopped[g]) }
+        }
+        
+        return targetRanges
+    }
+    
+    
+    /// Recursive function to get close enough to the intersection point.
+    /// The hazard here for an infinite loop is if the span input doesn't contain a crossing.
+    func converge(ray: Line, span: ClosedRange<Double>, accuracy: Double, layersRemaining: Int) throws -> Point3D?   {
+        
+        if layersRemaining == 0  { throw ConvergenceError(tnuoc: 0) }   // Safety valve
+        
+        var collide: Point3D?
+        
+        let bittyspans = chopRange(pristine: span, chunks: 5)
+        
+        for onebitty in bittyspans   {
+            let proj = doesCross(span: onebitty, ray: ray)
+            
+            let low = try! self.pointAt(t: onebitty.lowerBound)
+            let high = try! self.pointAt(t: onebitty.upperBound)
+
+            if proj == 0.0   {     // I wonder how frequently this will get run?
+                if Line.isCoincident(straightA: ray, pip: low)   {
+                    return low
+                }  else  {
+                    return high
+                }
+            }
+            
+            if proj < 0.0   {
+                let sep = Point3D.dist(pt1: low, pt2: high)
+                
+                if sep < accuracy   {
+                    collide = Point3D.midway(alpha: low, beta: high)
+                    break
+                }  else  {
+                    collide = try converge(ray: ray, span: onebitty, accuracy: accuracy, layersRemaining: layersRemaining - 1)
+                }
+                
+            }
+        }
+        
+        return collide
+    }
+    
+    
+    /// Split a range into pieces
+    public func chopRange(pristine: ClosedRange<Double>, chunks: Int) -> [ClosedRange<Double>]   {
+                
+        let increment = (pristine.upperBound - pristine.lowerBound) / Double(chunks)
+        
+        /// Array of smaller ranges
+        var rangeHerd = [ClosedRange<Double>]()
+        
+        var freshLower = pristine.lowerBound
+        
+        for g in 1...chunks   {
+            let freshUpper = pristine.lowerBound + Double(g) * increment
+            let freshRange = ClosedRange<Double>(uncheckedBounds: (lower: freshLower, upper: freshUpper))
+            rangeHerd.append(freshRange)
+            
+            freshLower = freshUpper   // Prepare for the next iteration
+        }
+        
+        return rangeHerd
+    }
     /// Generate even intervals by parameter value.
     /// - Parameters:
     ///   - divs: Number of intervals

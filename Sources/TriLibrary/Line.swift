@@ -71,6 +71,23 @@ public struct Line: Equatable {
     }
     
 
+    /// Find the vector components for the point relative to the line.
+    /// - Parameters:
+    ///   - yonder:  Target point
+    /// - Returns: Tuple of Vector3D
+    /// - SeeAlso:  'resolveRelative(Point)'
+    public func resolveRelativeVec(yonder: Point3D) -> (along: Vector3D, perp: Vector3D)   {
+        
+        let bridge = Vector3D.built(from: self.origin, towards: yonder)
+        let distAlong = Vector3D.dotProduct(lhs: bridge, rhs: self.direction)
+        
+        let along = self.direction * distAlong
+        let perp = bridge - along
+        
+        return (along, perp)
+    }
+    
+    
     /// Find the components of a vector relative to the line
     /// - Parameters:
     ///   - arrow:  Trial Vector

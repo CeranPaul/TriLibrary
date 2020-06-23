@@ -30,6 +30,8 @@ public protocol PenCurve   {
     /// Must have finite thickness in all three axes
     func getExtent() -> OrthoVol
     
+    func getLength() -> Double
+    
     /// Plot the curve.  Your classic example of polymorphism
     func draw(context: CGContext, tform: CGAffineTransform, allowableCrown: Double) throws
     
