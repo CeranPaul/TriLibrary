@@ -7,6 +7,7 @@
 //
 
 import Foundation
+import CoreGraphics
 
 /// Can represent a portion, or a complete circle
 public struct Arc: PenCurve, Equatable   {

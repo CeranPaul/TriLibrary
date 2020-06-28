@@ -7,6 +7,7 @@
 //
 
 import Foundation
+import CoreGraphics
 
 /// Simple representation of a position in space by the use of three orthogonal coordinates.
 public struct Point3D: Hashable {

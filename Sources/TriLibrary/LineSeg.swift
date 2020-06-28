@@ -7,6 +7,7 @@
 //
 
 import Foundation
+import CoreGraphics
 
 /// A wire between two points.
 public struct LineSeg: PenCurve, Equatable {

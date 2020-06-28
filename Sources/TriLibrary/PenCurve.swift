@@ -7,6 +7,7 @@
 //
 
 import Foundation
+import CoreGraphics
 
 /// The general framework for a curve.  Not limited to 2D.
 public protocol PenCurve   {

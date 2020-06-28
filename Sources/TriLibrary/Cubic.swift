@@ -7,6 +7,7 @@
 //
 
 import Foundation
+import CoreGraphics
 import simd
 
 // What's the right way to check for equivalence?  End points and control points?
