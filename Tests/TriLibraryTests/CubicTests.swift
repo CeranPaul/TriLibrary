@@ -151,10 +151,10 @@ class CubicTests: XCTestCase {
     
     func testSetIntent()   {
         
-        XCTAssert(cup!.usage == PenTypes.Ordinary)
+        XCTAssert(cup!.usage == "Ordinary")
         
-        cup!.setIntent(purpose: PenTypes.Selected)
-        XCTAssert(cup!.usage == PenTypes.Selected)
+        cup!.setIntent(purpose: "Selected")
+        XCTAssert(cup!.usage == "Selected")
         
     }
     

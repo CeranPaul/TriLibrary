@@ -22,7 +22,7 @@ class LineSegTests: XCTestCase {
         XCTAssert(alpha == stroke.getOneEnd())
         XCTAssert(beta == stroke.getOtherEnd())
         
-        XCTAssert(stroke.usage == PenTypes.Ordinary)
+        XCTAssert(stroke.usage == "Ordinary")
         
         let gamma = Point3D(x: 2.5, y: 2.5, z: 2.5)
         
@@ -37,10 +37,10 @@ class LineSegTests: XCTestCase {
         
         var stroke = try! LineSeg(end1: alpha, end2: beta)
         
-        XCTAssert(stroke.usage == PenTypes.Ordinary)
+        XCTAssert(stroke.usage == "Ordinary")
         
-        stroke.setIntent(purpose: PenTypes.Selected)
-        XCTAssert(stroke.usage == PenTypes.Selected)
+        stroke.setIntent(purpose: "Selected")
+        XCTAssert(stroke.usage == "Selected")
         
     }
     

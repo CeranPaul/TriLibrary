@@ -44,7 +44,7 @@ public struct Cubic: PenCurve   {
     var ptOmega: Point3D
     
     /// The enum that hints at the meaning of the curve
-    public var usage: PenTypes
+    public var usage: String
     
     /// Limited to be bettween 0.0 and 1.0
     public var parameterRange: ClosedRange<Double>
@@ -80,7 +80,7 @@ public struct Cubic: PenCurve   {
         ptOmega = Point3D(x: sumX, y: sumY, z: sumZ)
         
         
-        self.usage = PenTypes.Ordinary
+        self.usage = "Ordinary"
         
         self.parameterRange = ClosedRange<Double>(uncheckedBounds: (lower: 0.0, upper: 1.0))
         
@@ -125,7 +125,7 @@ public struct Cubic: PenCurve   {
         self.cz = slopeA.k
         self.dz = ptA.z
         
-        self.usage = PenTypes.Ordinary
+        self.usage = "Ordinary"
         
         self.parameterRange = ClosedRange<Double>(uncheckedBounds: (lower: 0.0, upper: 1.0))
         
@@ -170,7 +170,7 @@ public struct Cubic: PenCurve   {
         self.cz = 3.0 * controlA.z - 3.0 * self.ptAlpha.z
         self.dz = self.ptAlpha.z
         
-        self.usage = PenTypes.Ordinary
+        self.usage = "Ordinary"
         
         self.parameterRange = ClosedRange<Double>(uncheckedBounds: (lower: 0.0, upper: 1.0))
         
@@ -252,7 +252,7 @@ public struct Cubic: PenCurve   {
         self.dz = coeffZ[3]
         
         
-        self.usage = PenTypes.Ordinary
+        self.usage = "Ordinary"
                 
     }
     
@@ -313,7 +313,7 @@ public struct Cubic: PenCurve   {
     
     /// Attach new meaning to the curve.
     /// - See: 'testSetIntent' under CubicTests
-    public mutating func setIntent(purpose: PenTypes) -> Void  {
+    public mutating func setIntent(purpose: String) -> Void  {
         self.usage = purpose
     }
     

@@ -426,11 +426,11 @@ class ArcTests: XCTestCase {
         var solarSystem1 = try! Arc(center: sun, end1: earth, end2: atlantis, useSmallAngle: false)
         
 
-        XCTAssert(solarSystem1.usage == PenTypes.Ordinary)
+        XCTAssert(solarSystem1.usage == "Ordinary")
         
-        solarSystem1.setIntent(purpose: PenTypes.Selected)
+        solarSystem1.setIntent(purpose: "Selected")
         
-        XCTAssert(solarSystem1.usage == PenTypes.Selected)
+        XCTAssert(solarSystem1.usage == "Selected")
         
     }
         

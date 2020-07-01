@@ -28,7 +28,7 @@ public struct Arc: PenCurve, Equatable   {
     public var parameterRange: ClosedRange<Double>
     
     /// The enum that hints at the meaning of the curve
-    public var usage: PenTypes
+    public var usage: String
     
     
     /// Turn local points into global points
@@ -85,7 +85,7 @@ public struct Arc: PenCurve, Equatable   {
         
         self.radius = Point3D.dist(pt1: ctr, pt2: start)
         
-        self.usage = .Ordinary
+        self.usage = "Ordinary"
         
         
         /// Coordinate system
@@ -154,7 +154,7 @@ public struct Arc: PenCurve, Equatable   {
         
         self.parameterRange = ClosedRange<Double>(uncheckedBounds: (lower: 0.0, upper: 1.0))
         
-        self.usage = .Ordinary
+        self.usage = "Ordinary"
         
         /// Coordinate system
         let csys = try CoordinateSystem(origin: self.center, refDirection: baseline, normal: self.axis)
@@ -168,7 +168,7 @@ public struct Arc: PenCurve, Equatable   {
     /// Attach new meaning to the curve
     /// - Parameter: purpose:PenTypes
     /// - See: 'testSetIntent' under ArcTests
-    public mutating func setIntent(purpose: PenTypes)   {
+    public mutating func setIntent(purpose: String)   {
         
         self.usage = purpose
     }

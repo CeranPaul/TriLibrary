@@ -12,10 +12,10 @@ import CoreGraphics
 /// The general framework for a curve.  Not limited to 2D.
 public protocol PenCurve   {
     
-    /// The enum that hints at the meaning of the curve
-    var usage: PenTypes   { get set }
+    /// A String that hints at the meaning of the curve
+    var usage: String   { get set }
     
-    /// I can't think of anywhere that this is used
+    /// Used for error checking
     var parameterRange: ClosedRange<Double>   { get set }
     
     /// Supply the point on the curve for the input parameter value

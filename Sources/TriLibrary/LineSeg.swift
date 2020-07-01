@@ -17,8 +17,8 @@ public struct LineSeg: PenCurve, Equatable {
     fileprivate var endAlpha: Point3D   // Private access to limit modification
     fileprivate var endOmega: Point3D
         
-    /// The enum that hints at the meaning of the curve
-    public var usage: PenTypes
+    /// The String that hints at the meaning of the curve
+    public var usage: String
     
     public var parameterRange: ClosedRange<Double>
     
@@ -34,7 +34,7 @@ public struct LineSeg: PenCurve, Equatable {
         self.endOmega = end2
         
         
-        self.usage = PenTypes.Ordinary
+        self.usage = "Ordinary"
         
         self.parameterRange = ClosedRange<Double>(uncheckedBounds: (lower: 0.0, upper: 1.0))
         
@@ -58,7 +58,7 @@ public struct LineSeg: PenCurve, Equatable {
     
     /// Attach new meaning to the curve
     /// - See: 'testSetIntent' under LineSegTests
-    public mutating func setIntent(purpose: PenTypes)   {
+    public mutating func setIntent(purpose: String)   {
         
         self.usage = purpose
     }
