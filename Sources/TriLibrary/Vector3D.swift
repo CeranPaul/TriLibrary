@@ -13,9 +13,9 @@ import Foundation
 /// See overloaded functions in the documentation.
 public struct Vector3D: Equatable {
     
-    var i: Double
-    var j: Double
-    var k: Double
+    public var i: Double
+    public var j: Double
+    public var k: Double
     
     /// Difference limit between components in equality checks
     public static var EpsilonV: Double = 0.0001

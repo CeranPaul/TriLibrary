@@ -12,9 +12,9 @@ import CoreGraphics
 /// Simple representation of a position in space by the use of three orthogonal coordinates.
 public struct Point3D: Hashable {
     
-    var x: Double    // Eventually these should be set as private?
-    var y: Double
-    var z: Double
+    public var x: Double 
+    public var y: Double
+    public var z: Double
 
     
     /// Threshhold of separation for equality checks
