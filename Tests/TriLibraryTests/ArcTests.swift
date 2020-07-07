@@ -363,6 +363,44 @@ class ArcTests: XCTestCase {
         
     }
     
+    func testIntersect()   {
+        
+        let up = Vector3D(i: 0.0, j: 0.0, k: 1.0)
+        let pivot = Point3D(x: 2.0, y: 1.0, z: 0.0)
+        let adam = Point3D(x: 3.5, y: 1.0, z: 0.0)
+        
+        let rainbow = try! Arc(ctr: pivot, axis: up, start: adam, sweep: Double.pi / -0.65)
+        
+        let kansas = Vector3D(i: 1.0, j: 0.0, k: 0.0)
+        
+        /// Origin for a high line that misses.
+        let mama = Point3D(x: -2.2, y: 3.0, z: 0.0)
+        let tooHigh = try! Line(spot: mama, arrow: kansas)
+        
+        let chubby = Point3D(x: -1.8, y: 1.75, z: 0.0)
+        let high = try! Line(spot: chubby, arrow: kansas)
+        
+        let everett = Point3D(x: -1.9, y: 0.25, z: 0.0)
+        let low = try! Line(spot: everett, arrow: kansas)
+        
+        let cody = Point3D(x: -1.45, y: -1.78, z: 0.0)
+        let tooLow = try! Line(spot: cody, arrow: kansas)
+        
+        
+        let whack2high = try! rainbow.intersect(ray: tooHigh, accuracy: 0.001)
+        XCTAssertEqual(0, whack2high.count)
+        
+        let whackhigh = try! rainbow.intersect(ray: high, accuracy: 0.001)
+        XCTAssertEqual(1, whackhigh.count)
+        
+        let whacklow = try! rainbow.intersect(ray: low, accuracy: 0.001)
+        XCTAssertEqual(2, whacklow.count)
+        
+        let whack2low = try! rainbow.intersect(ray: tooLow, accuracy: 0.001)
+        XCTAssertEqual(0, whack2low.count)
+        
+    }
+    
 //    func testReverse()   {
 //
 //        let ctr = Point3D(x: 10.5, y: 6.0, z: -1.2)

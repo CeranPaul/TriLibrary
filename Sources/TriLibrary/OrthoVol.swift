@@ -262,7 +262,7 @@ public struct OrthoVol   {
 /// - Parameters:
 ///   - lhs: One volume
 ///   - rhs: Another brick
-func + (lhs: OrthoVol, rhs: OrthoVol) -> OrthoVol   {
+public func + (lhs: OrthoVol, rhs: OrthoVol) -> OrthoVol   {
     
     let leastX = min(lhs.rangeX.lowerBound, rhs.rangeX.lowerBound)
     let mostX = max(lhs.rangeX.upperBound, rhs.rangeX.upperBound)

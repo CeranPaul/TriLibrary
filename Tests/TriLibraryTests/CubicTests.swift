@@ -290,6 +290,65 @@ class CubicTests: XCTestCase {
         XCTAssertEqual(hump, 0.0543, accuracy: 0.0001)
     }
     
+    func testCrossing()   {
+        
+        let pt1 = Point3D(x: -1.2, y: 0.39, z: 0.0)
+        let pt2 = Point3D(x: 1.1, y: 1.05, z: 0.0)
+        let pt3 = Point3D(x: 1.95, y: -0.5, z: 0.0)
+        let pt4 = Point3D(x: 3.64, y: 0.04, z: 0.0)
+
+        let rolling = try! Cubic(alpha: pt1, beta: pt2, betaFraction: 0.45, gamma: pt3, gammaFraction: 0.65, delta: pt4)
+        
+        let kansas = Vector3D(i: 1.0, j: 0.0, k: 0.0)
+
+        /// Origin for a high line that misses.
+        let mama = Point3D(x: -2.2, y: 3.0, z: 0.0)
+        let tooHigh = try! Line(spot: mama, arrow: kansas)
+        
+        let chubby = Point3D(x: -1.8, y: 1.75, z: 0.0)
+        let high = try! Line(spot: chubby, arrow: kansas)
+        
+        let everett = Point3D(x: -1.9, y: 0.25, z: 0.0)
+        let low = try! Line(spot: everett, arrow: kansas)
+        
+        let cody = Point3D(x: -1.45, y: -1.78, z: 0.0)
+        let tooLow = try! Line(spot: cody, arrow: kansas)
+        
+        let wholeCurve = ClosedRange<Double>(uncheckedBounds: (lower: 0.0, upper: 1.0))
+        
+        let collide2High = rolling.crossing(ray: tooHigh, span: wholeCurve, chunks: 100)
+        XCTAssertEqual(0, collide2High.count)
+
+        let collideHigh = rolling.crossing(ray: high, span: wholeCurve, chunks: 100)
+        XCTAssertEqual(2, collideHigh.count)
+
+        let collideLow = rolling.crossing(ray: low, span: wholeCurve, chunks: 100)
+        XCTAssertEqual(1,  collideLow.count)
+        
+        let collide2Low = rolling.crossing(ray: tooLow, span: wholeCurve, chunks: 100)
+        XCTAssertEqual(0, collide2Low.count)
+
+    }
+    
+    func testIntersect()   {
+        
+        let pt1 = Point3D(x: -1.2, y: 0.39, z: 0.0)
+        let pt2 = Point3D(x: 1.1, y: 1.05, z: 0.0)
+        let pt3 = Point3D(x: 1.95, y: -0.5, z: 0.0)
+        let pt4 = Point3D(x: 3.64, y: 0.04, z: 0.0)
+
+        let rolling = try! Cubic(alpha: pt1, beta: pt2, betaFraction: 0.45, gamma: pt3, gammaFraction: 0.65, delta: pt4)
+        
+        let kansas = Vector3D(i: 1.0, j: 0.0, k: 0.0)
+
+        let chubby = Point3D(x: -1.8, y: 1.75, z: 0.0)
+        let high = try! Line(spot: chubby, arrow: kansas)
+        
+        let whacks = try! rolling.intersect(ray: high, accuracy: 0.001)
+        XCTAssertEqual(2, whacks.count)
+
+    }
+    
     func testRefine()   {
         
         let near = Point3D(x: 2.9, y: 1.4, z: 0.7)
