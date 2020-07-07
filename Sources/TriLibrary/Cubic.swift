@@ -775,7 +775,7 @@ public struct Cubic: PenCurve   {
         //TODO: This needs testing for boundary conditions and the decreasing flag condition.
 
         /// How quickly to refine the parameter guess
-        let factor = 1.25
+        let factor = 1.60
         
         /// Change in parameter - constantly refined.
         var step = 1.0 - currentT
@@ -812,9 +812,9 @@ public struct Cubic: PenCurve   {
             step = step / factor     // Prepare for the next iteration
             safety += 1
             
-        }  while deviation > allowableCrown  && safety < 12    // Fails ugly!
+        }  while deviation > allowableCrown  && safety < 16    // Fails ugly!
         
-        if safety > 11 { throw ConvergenceError(tnuoc: safety) }
+        if safety > 15 { throw ConvergenceError(tnuoc: safety) }
 
         return trialT
     }
