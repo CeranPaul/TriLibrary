@@ -192,20 +192,19 @@ class LineTests: XCTestCase {
         
         XCTAssert(Line.isCoplanar(straightA: redstone, straightB: titan))
         
-        // TODO: Figure out why this doesn't work!
            // No intersection case
-//        let orig4 = Point3D(x: 10.5, y: 5.5, z: 1.0)
-//        let dir4 = Vector3D(i: 0.0, j: 0.0, k: 1.0)
-//
-//        let arrow4 = try! Line(spot: orig4, arrow: dir4)
-//
-//        let orig5 = Point3D(x: 6.2, y: 6.5, z: 3.0)
-//        let dir5 = Vector3D(i: 1.0, j: 0.0, k: 0.0)
-//
-//        let arrow5 = try! Line(spot: orig5, arrow: dir5)
-//
-//        XCTAssertFalse(Line.isCoplanar(straightA: arrow4, straightB: arrow5))
-//
+        let orig4 = Point3D(x: 10.5, y: 5.5, z: 1.0)
+        let dir4 = Vector3D(i: 0.0, j: 0.0, k: 1.0)
+
+        let arrow4 = try! Line(spot: orig4, arrow: dir4)
+
+        let orig5 = Point3D(x: 6.2, y: 6.5, z: 3.0)
+        let dir5 = Vector3D(i: 1.0, j: 0.0, k: 0.0)
+
+        let arrow5 = try! Line(spot: orig5, arrow: dir5)
+
+        XCTAssertFalse(Line.isCoplanar(straightA: arrow4, straightB: arrow5))
+
         
         let cOrig = Point3D(x: 4.0, y: 7.5, z: -2.75)
         var cDir = Vector3D(i: -1.0, j: -1.0, k: -1.0)

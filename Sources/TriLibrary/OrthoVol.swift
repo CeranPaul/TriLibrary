@@ -127,22 +127,22 @@ public struct OrthoVol   {
     
     
     /// Simple getter for starting corner
-    func  getOrigin() -> Point3D  {
+    public func  getOrigin() -> Point3D  {
         return Point3D(x: rangeX.lowerBound, y: rangeY.lowerBound, z: rangeZ.lowerBound)
     }
     
     /// Simple getter for the width
-    func  getWidth() -> Double  {
+    public func  getWidth() -> Double  {
         return rangeX.upperBound - rangeX.lowerBound
     }
     
     /// Simple getter for the height
-    func  getHeight() -> Double  {
+    public func  getHeight() -> Double  {
         return rangeY.upperBound - rangeY.lowerBound
     }
     
     /// Simple getter for the depth
-    func  getDepth() -> Double  {
+    public func  getDepth() -> Double  {
         return rangeZ.upperBound - rangeZ.lowerBound
     }
     
@@ -253,8 +253,7 @@ public struct OrthoVol   {
         
         return freshVol
     }
-    
-    
+        
 }   // End of definition for struct OrthoVol
 
 

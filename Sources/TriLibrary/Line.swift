@@ -195,7 +195,7 @@ public struct Line: Equatable {
         var perp1 = try! Vector3D.crossProduct(lhs: straightA.getDirection(), rhs: bridgeVector)
         perp1.normalize()
         
-        var perp2 = try! Vector3D.crossProduct(lhs: bridgeVector, rhs: straightA.getDirection())
+        var perp2 = try! Vector3D.crossProduct(lhs: bridgeVector, rhs: straightB.getDirection())
         perp2.normalize()   
         
         let sameFlag = perp1 == perp2
