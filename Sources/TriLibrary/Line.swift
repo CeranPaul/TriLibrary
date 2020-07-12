@@ -192,6 +192,11 @@ public struct Line: Equatable {
         if bridgeVector.isZero() { return true }   // Having the same origin means that they intersect.
         
         
+        if try! Vector3D.isScaled(lhs: bridgeVector, rhs: straightA.getDirection()) { return true }   // The origin of straightB lies on straightA, therefore they intersect.
+        
+        if try! Vector3D.isScaled(lhs: bridgeVector, rhs: straightB.getDirection()) { return true }   // The origin of straightA lies on straightB, therefore they intersect.
+        
+
         var perp1 = try! Vector3D.crossProduct(lhs: straightA.getDirection(), rhs: bridgeVector)
         perp1.normalize()
         

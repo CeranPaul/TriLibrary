@@ -274,6 +274,25 @@ class LineSegTests: XCTestCase {
         
         XCTAssert(crater5.count == 2)
         
+           // Intersect at one end
+        let ptG = Point3D(x: -2.0, y: 2.0, z: 5.0)
+        let thataway = Vector3D(i: 1.0, j: 0.0, k: 0.0)
+        
+        let horizon = try! Line(spot: ptG, arrow: thataway)
+        
+        let crater6 = plateau.intersect(ray: horizon)
+        
+        XCTAssert(crater6.count == 1)
+        
+           // Intersect at other end
+        let ptH = Point3D(x: -2.0, y: 4.0, z: 5.0)
+        
+        let horizon2 = try! Line(spot: ptH, arrow: thataway)
+        
+        let crater7 = plateau.intersect(ray: horizon2)
+        
+        XCTAssert(crater7.count == 1)
+        
     }
     
     

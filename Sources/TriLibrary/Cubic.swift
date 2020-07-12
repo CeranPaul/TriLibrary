@@ -608,6 +608,7 @@ public struct Cubic: PenCurve   {
     
     /// Intersection points with a line.
     /// Needs to be a thread safe function.
+    /// Ineffective if the intersection is either endpoint.
     /// - Parameters:
     ///   - ray:  The Line to be used for intersecting
     ///   - accuracy:  Optional - How close is close enough?

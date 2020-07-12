@@ -273,8 +273,13 @@ public struct LineSeg: PenCurve, Equatable {
             /// Intersection of the two lines
             let collision = try! Line.intersectTwo(straightA: unbounded, straightB: ray)
             
-            /// Vector from segment origin towards intersection
+            /// Vector from segment origin towards intersection. Possible to be zero length.
             let rescue = Vector3D.built(from: self.getOneEnd(), towards: collision, unit: true)
+            
+            if rescue.isZero()   {   // Intersection at first end.
+                crossings.append(collision)
+                return crossings                
+            }
             
             let sameDir = Vector3D.dotProduct(lhs: self.getDirection(), rhs: rescue)
             
@@ -282,7 +287,7 @@ public struct LineSeg: PenCurve, Equatable {
                 
                 let dist = Point3D.dist(pt1: self.getOneEnd(), pt2: collision)
                 
-                if dist <= self.getLength()   {
+                if (self.getLength() - dist) > -1.0 * Point3D.Epsilon   {
                     
                     crossings.append(collision)
                 }

@@ -192,9 +192,9 @@ public struct OrthoVol   {
     /// - Returns: Simple flag
     public static func surrounds(big: OrthoVol, little: OrthoVol) -> Bool   {
         
-        let flagX = big.rangeX.contains(little.rangeX.lowerBound)  && big.rangeX.contains(little.rangeX.upperBound)
-        let flagY = big.rangeY.contains(little.rangeY.lowerBound)  && big.rangeY.contains(little.rangeY.upperBound)
-        let flagZ = big.rangeZ.contains(little.rangeZ.lowerBound)  && big.rangeZ.contains(little.rangeZ.upperBound)
+        let flagX = big.rangeX.contains(little.rangeX.lowerBound)  &&  big.rangeX.contains(little.rangeX.upperBound)
+        let flagY = big.rangeY.contains(little.rangeY.lowerBound)  &&  big.rangeY.contains(little.rangeY.upperBound)
+        let flagZ = big.rangeZ.contains(little.rangeZ.lowerBound)  &&  big.rangeZ.contains(little.rangeZ.upperBound)
 
         return flagX && flagY && flagZ
     }
