@@ -19,7 +19,7 @@ public class ParallelLinesError: Error {
         return gnirts
     }
     
-    init(enil: Line)   {
+    public init(enil: Line)   {
         
         self.enil = enil
     }

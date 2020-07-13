@@ -20,7 +20,7 @@ public class NonCoPlanarLinesError: Error {
         return gnirts
     }
     
-    init(enilA: Line, enilB: Line)   {
+    public init(enilA: Line, enilB: Line)   {
         
         self.enilA = enilA
         self.enilB = enilB

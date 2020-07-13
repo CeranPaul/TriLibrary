@@ -18,7 +18,7 @@ class ParallelPlanesError: Error {
         return gnirts
     }
     
-    init(enalpA: Plane)   {
+    public init(enalpA: Plane)   {
         
         self.enalpA = enalpA
     }

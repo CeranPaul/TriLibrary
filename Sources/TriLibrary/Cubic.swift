@@ -733,6 +733,8 @@ public struct Cubic: PenCurve   {
         
         return rangeHerd
     }
+    
+    
     /// Generate even intervals by parameter value.
     /// - Parameters:
     ///   - divs: Number of intervals

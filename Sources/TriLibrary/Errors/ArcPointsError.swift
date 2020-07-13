@@ -21,7 +21,7 @@ public class ArcPointsError: Error {
         return "Three points cannot make an arc: " + String(describing: ptA) + ", " + String(describing: ptB) + ", " + String(describing: ptC)
     }
     
-    init(badPtA: Point3D, badPtB: Point3D, badPtC: Point3D)   {
+    public init(badPtA: Point3D, badPtB: Point3D, badPtC: Point3D)   {
         
         self.ptA = badPtA
         self.ptB = badPtB

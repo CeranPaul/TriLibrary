@@ -16,7 +16,7 @@ public class ZeroVectorError: Error {
         return gnirts
     }
     
-    init(dir: Vector3D)   {
+    public init(dir: Vector3D)   {
         
         self.thataway = dir
     }

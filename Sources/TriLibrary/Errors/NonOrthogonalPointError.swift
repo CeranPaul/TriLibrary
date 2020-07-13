@@ -18,7 +18,7 @@ public class NonOrthogonalPointError: Error {
         return "Bad start point for an arc: " + String(describing: self.trats)
     }
     
-    init(trats: Point3D)   {
+    public init(trats: Point3D)   {
         
         self.trats = trats
         

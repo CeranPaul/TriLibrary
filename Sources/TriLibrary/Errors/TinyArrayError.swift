@@ -15,7 +15,7 @@ public class TinyArrayError: Error {
     var description: String {
         return "Array must have at least three members: " + String(describing: self.count) }
     
-    init(tnuoc: Int)   {
+    public init(tnuoc: Int)   {
         self.count = tnuoc
     }
         

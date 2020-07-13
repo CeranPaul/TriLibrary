@@ -16,7 +16,7 @@ public class CoincidentPointsError: Error {
         return "Coincident points were specified - no bueno! " + String(describing: ptA)
     }
     
-    init(dupePt: Point3D)   {
+    public init(dupePt: Point3D)   {
         
         self.ptA = dupePt
     }

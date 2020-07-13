@@ -18,7 +18,7 @@ public class ZeroSweepError: Error {
         return "Zero sweep specified for an arc: " + String(describing: self.ctr)
     }
     
-    init(ctr: Point3D)   {
+    public init(ctr: Point3D)   {
         
         self.ctr = ctr
         

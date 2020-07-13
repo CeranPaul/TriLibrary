@@ -17,7 +17,7 @@ class ParallelError: Error {
         return " Line and plane were parallel  " + String(describing: enil.getDirection())
     }
     
-    init(enil: Line, enalp: Plane)   {
+    public init(enil: Line, enalp: Plane)   {
         
         self.enil = enil
         self.enalp = enalp

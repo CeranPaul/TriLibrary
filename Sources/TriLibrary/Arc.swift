@@ -53,7 +53,7 @@ public struct Arc: PenCurve, Equatable   {
     ///   - NonOrthogonalPointError
     ///   - ParameterRangeError for a bad sweep value
     /// - See: 'testFidelityCASS' under ArcTests
-    init(ctr: Point3D, axis: Vector3D, start: Point3D, sweep: Double) throws   {
+    public init(ctr: Point3D, axis: Vector3D, start: Point3D, sweep: Double) throws   {
         
         guard axis.isUnit() else { throw NonUnitDirectionError(dir: axis) }
         
@@ -109,7 +109,7 @@ public struct Arc: PenCurve, Equatable   {
     ///   - CoincidentPointsError for identical endpoints
     ///   - CoincidentPointsError for collinear points
     /// - See: 'testFidelityThreePoints' under ArcTests
-    init(center: Point3D, end1: Point3D, end2: Point3D, useSmallAngle: Bool) throws   {
+    public init(center: Point3D, end1: Point3D, end2: Point3D, useSmallAngle: Bool) throws   {
         
         let rad1 = Point3D.dist(pt1: center, pt2: end1)
         let rad2 = Point3D.dist(pt1: center, pt2: end2)

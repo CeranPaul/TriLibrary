@@ -15,7 +15,7 @@ class ConvergenceError: Error {
     var description: String {
         return "No convergence after " + String(describing: self.count) + " iterations" }
     
-    init(tnuoc: Int)   {
+    public init(tnuoc: Int)   {
         self.count = tnuoc
     }
         

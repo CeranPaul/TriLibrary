@@ -15,7 +15,7 @@ public class NegativeAccuracyError: Error {
     var description: String {
         return "Accuracy must be a positive number: " + String(describing: self.acc) }
     
-    init(acc: Double)   {
+    public init(acc: Double)   {
         self.acc = acc
     }
         

@@ -15,5 +15,8 @@ public class NonOrthogonalCSYSError: Error {
         return gnirts
     }
     
+    public init(axis: Vector3D)   {
+        
+    }
 }
 

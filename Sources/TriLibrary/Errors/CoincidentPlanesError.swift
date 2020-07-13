@@ -18,7 +18,7 @@ class CoincidentPlanesError: Error {
         return gnirts
     }
     
-    init(enalpA: Plane)   {
+    public init(enalpA: Plane)   {
         
         self.enalpA = enalpA
     }

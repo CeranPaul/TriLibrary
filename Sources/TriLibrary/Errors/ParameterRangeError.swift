@@ -16,7 +16,7 @@ public class ParameterRangeError: Error {
         return "Parameter was outside valid range! " + String(describing: paramA)
     }
     
-    init(parA: Double)   {
+    public init(parA: Double)   {
         
         self.paramA = parA
     }
