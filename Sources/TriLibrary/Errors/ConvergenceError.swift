@@ -8,7 +8,7 @@
 
 import Foundation
 
-class ConvergenceError: Error {
+public class ConvergenceError: Error {
     
     var count: Int
     

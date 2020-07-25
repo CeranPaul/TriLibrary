@@ -9,7 +9,7 @@
 import Foundation
 
 /// Exception for when the planes shouldn't have been coincident - i.e. when trying to intersect them
-class CoincidentPlanesError: Error {
+public class CoincidentPlanesError: Error {
     
     var enalpA: Plane
     
