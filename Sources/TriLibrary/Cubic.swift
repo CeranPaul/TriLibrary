@@ -427,6 +427,143 @@ public struct Cubic: PenCurve   {
     }
     
     
+        /// Check whether a point is or isn't perched on the curve.
+        /// - Parameters:
+        ///   - speck:  Point near the curve.
+        /// - Returns: Flag, and optional parameter value
+        /// - See: 'testPerch' under CubicTests
+        public func isPerchFor(speck: Point3D) throws -> (flag: Bool, param: Double?)   {
+            
+               // Shortcuts!
+            if speck == self.ptAlpha   { return (true, self.parameterRange.lowerBound) }
+            if speck == self.ptOmega   { return (true, self.parameterRange.upperBound) }
+            
+            /// True length along the curve
+            let curveLength = self.getLength()
+            
+            /// Points along the curve
+            let crumbs = self.diceRange(pristine: self.parameterRange, chunks: 40)
+            
+            /// Distances to the target point (and parameter ranges)
+            let seps = crumbs.map( { rangeDist(egnar: $0, curve: self, awaySpeck: speck) } )
+            
+            /// Ranges whose midpoint is close enough to be of interest.
+            let moreScrutiny = seps.filter( { $0.dist < curveLength / 4.0 } )
+            
+            /// Whether or not speck is too far away
+            if moreScrutiny.count == 0   { return (false, nil) }
+            
+            
+            let rankedRanges = moreScrutiny.sorted(by: { $0.dist < $1.dist } )
+
+            /// Range of parameter to use for a refined check on the closest range
+            let startSpan = rankedRanges[0].range
+
+    //        let startSpan = moreScrutiny.min { a,b in a.dist < b.dist }
+            
+            /// Parameter for the curve point that is nearest
+            var nearCurveParam: Double
+            
+            nearCurveParam = try convergeMinDist(speck: speck, span: startSpan, curve: self, layersRemaining: 8)
+            
+            let nearCurvePoint = try self.pointAt(t: nearCurveParam)
+            let flag = Point3D.dist(pt1: nearCurvePoint, pt2: speck) < Point3D.Epsilon
+            
+            return (flag, nearCurveParam)
+        }
+        
+        
+        /// Recursively converge to a parameter value where speck is closest.
+        /// - Parameters:
+        ///   - speck: Target point
+        ///   - span: Parameter range to work in
+        ///   - curve: Curve to check against
+        ///   - layersRemaining: Iterations left before ending the effort
+        /// - Returns: Parameter value for the curve point closest to speck
+        /// - Throws:
+        ///     - ConvergenceError when a range can't be refined closely enough in 8 iterations.
+        ///     - ParameterRangeError when a range is off the curve.
+        private func convergeMinDist(speck: Point3D, span: ClosedRange<Double>, curve: PenCurve, layersRemaining: Int) throws -> Double   {
+            
+            if layersRemaining == 0  { throw ConvergenceError(tnuoc: 0) }   // Safety valve
+            
+            /// Parameter value to be returned
+            var closest: Double
+            
+            /// Smaller ranges within the second passed parameter
+            let bittyspans = self.diceRange(pristine: span, chunks: 5)
+            
+            /// Distances from the middle of each of the smaller ranges.
+            let trips = bittyspans.map( { rangeDist(egnar: $0, curve: curve, awaySpeck: speck) } )
+            
+            /// Sorted version
+            let sorTrips = trips.sorted(by: { $0.dist < $1.dist })
+            
+            /// rangeDist with the smallest distance
+            let shrimp = sorTrips[0]
+            
+            if shrimp.getBridgeDist(curve: curve) < Point3D.Epsilon  {
+                closest = (shrimp.range.lowerBound + shrimp.range.upperBound) / 2.0
+                return closest
+            }  else  {
+                closest = try convergeMinDist(speck: speck, span: shrimp.range, curve: curve, layersRemaining: layersRemaining - 1)
+            }
+            
+            return closest
+        }
+
+        
+        public struct rangeDist   {
+            
+            var range: ClosedRange<Double>
+            var dist: Double
+            
+            init(egnar: ClosedRange<Double>, curve: PenCurve, awaySpeck: Point3D)   {
+                
+                self.range = egnar
+                
+                let middleParam = (egnar.lowerBound + egnar.upperBound) / 2.0
+                let onCurve = try! curve.pointAt(t: middleParam)
+                self.dist = Point3D.dist(pt1: onCurve, pt2: awaySpeck)
+                
+            }
+            
+            public func getBridgeDist(curve: PenCurve) -> Double   {
+                
+                let hyar = try! curve.pointAt(t: self.range.lowerBound)
+                let thar = try! curve.pointAt(t: self.range.upperBound)
+                
+                return Point3D.dist(pt1: hyar, pt2: thar)
+            }
+        }
+        
+        
+    /// Split a range into pieces
+    /// - Parameters:
+    ///   - pristine: Original parameter range
+    /// - Returns: Array of equal smaller ranges
+    /// - SeeAlso: dice
+    public func diceRange(pristine: ClosedRange<Double>, chunks: Int) -> [ClosedRange<Double>]   {
+                
+        let increment = (pristine.upperBound - pristine.lowerBound) / Double(chunks)
+        
+        /// Array of smaller ranges
+        var rangeHerd = [ClosedRange<Double>]()
+        
+        var freshLower = pristine.lowerBound
+        
+        for g in 1...chunks   {
+            let freshUpper = pristine.lowerBound + Double(g) * increment
+            let freshRange = ClosedRange<Double>(uncheckedBounds: (lower: freshLower, upper: freshUpper))
+            rangeHerd.append(freshRange)
+            
+            freshLower = freshUpper   // Prepare for the next iteration
+        }
+        
+        return rangeHerd
+    }
+    
+    
     /// Create a new curve translated, scaled, and rotated by the matrix.
     /// - Parameters:
     ///   - xirtam: Matrix containing translation, rotation, and scaling to be applied

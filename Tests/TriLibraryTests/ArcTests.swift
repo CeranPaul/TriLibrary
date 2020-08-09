@@ -435,6 +435,46 @@ class ArcTests: XCTestCase {
 //        XCTAssert(Line.isCoincident(straightA: ray2, pip: plop))
 //    }
     
+    func testPerch()   {
+        
+        let sun = Point3D(x: 3.5, y: 6.0, z: 1.0)
+        let earth = Point3D(x: 5.5, y: 6.0, z: 1.0)
+        let atlantis = Point3D(x: 3.5, y: 6.0, z: 3.0)
+        
+        let solarSystem1 = try! Arc(center: sun, end1: earth, end2: atlantis, useSmallAngle: true)
+        
+           // Not on Arc
+        let t1 = Point3D(x: 4.5, y: 6.0, z: 1.35)
+
+        var sitRep = try! solarSystem1.isPerchFor(speck: t1)
+        XCTAssertFalse(sitRep.flag)
+
+           // Far end
+        let t2 = Point3D(x: 3.5, y: 6.0, z: 3.0)
+
+        sitRep = try! solarSystem1.isPerchFor(speck: t2)
+        XCTAssert(sitRep.flag)
+
+           // Right radius with good angle
+        let t3 = Point3D(x: 3.5 + 2.0 * sqrt(2.0) / 2.0, y: 6.0, z: 1.0 + 2.0 * sqrt(2.0) / 2.0)
+        
+        sitRep = try! solarSystem1.isPerchFor(speck: t3)
+        XCTAssert(sitRep.flag)
+        
+           // Right radius with bad angle
+        let solarSystem2 = try! Arc(center: sun, end1: earth, end2: atlantis, useSmallAngle: false)
+        
+        sitRep = try! solarSystem2.isPerchFor(speck: t3)
+        XCTAssertFalse(sitRep.flag)
+        
+           // Out of plane
+        let t4 = Point3D(x: 3.5 + 2.0 * sqrt(2.0) / 2.0, y: 7.0, z: 1.0 + 2.0 * sqrt(2.0) / 2.0)
+        
+        sitRep = try! solarSystem1.isPerchFor(speck: t4)
+        XCTAssertFalse(sitRep.flag)
+        
+    }
+    
     func testEquals() {
         
         let sun = Point3D(x: 3.5, y: 6.0, z: 0.0)

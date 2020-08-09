@@ -140,6 +140,39 @@ public struct LineSeg: PenCurve, Equatable {
     }
     
     
+    /// Check whether a point is or isn't perched on the curve.
+    /// - Parameters:
+    ///   - speck:  Point near the curve.
+    /// - Returns: Flag, and optional parameter value
+    /// - See: 'testPerch' under LineSegTests
+    public func isPerchFor(speck: Point3D) throws -> (flag: Bool, param: Double?)   {
+        
+           // Shortcuts!
+        if speck == self.endAlpha   { return (true, self.parameterRange.lowerBound) }
+        if speck == self.endOmega   { return (true, self.parameterRange.upperBound) }
+        
+        /// True length along the curve
+        let curveLength = self.getLength()
+        
+        let relPos = self.resolveRelativeVec(speck: speck)
+        
+        if relPos.perp.length() > Point3D.Epsilon   { return (false, nil) }
+        else {
+            if relPos.along.length() < curveLength   {
+                
+                let lsDir = Vector3D.built(from: self.endAlpha, towards: endOmega, unit: true)
+                var dupe = relPos.along
+                dupe.normalize()
+                
+                if Vector3D.dotProduct(lhs: lsDir, rhs: dupe) != 1.0   { return (false, nil) }
+                let proportion = relPos.along.length() / curveLength
+                return (true, proportion)
+            }
+        }
+        
+        return (false, nil)
+    }
+    
     /// Plot the line segment.  This will be called by the UIView 'drawRect' function
     /// - Parameters:
     ///   - context: In-use graphics framework

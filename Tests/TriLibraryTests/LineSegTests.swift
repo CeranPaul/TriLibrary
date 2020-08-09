@@ -295,6 +295,37 @@ class LineSegTests: XCTestCase {
         
     }
     
+    func testPerch()   {
+        
+        let ptA = Point3D(x: 5.0, y: 2.0, z: 2.0)
+        let ptB = Point3D(x: 5.0, y: 4.0, z: 4.0)
+        
+        let contrail = try! LineSeg(end1: ptA, end2: ptB)
+        
+        let t1 = Point3D(x: 5.0, y: 5.0, z: 5.0)
+        
+        var sitRep = try! contrail.isPerchFor(speck: t1)
+        XCTAssertFalse(sitRep.flag)
+        
+        
+        let t2 = Point3D(x: 5.0, y: 3.65, z: 3.65)
+        
+        sitRep = try! contrail.isPerchFor(speck: t2)
+        XCTAssert(sitRep.flag)
+
+        let t3 = Point3D(x: 5.0, y: 2.5, z: 4.1)
+        
+        sitRep = try! contrail.isPerchFor(speck: t3)
+        XCTAssertFalse(sitRep.flag)
+        
+        
+        let t4 = Point3D(x: 5.0, y: 0.5, z: 0.5)
+        
+        sitRep = try! contrail.isPerchFor(speck: t4)
+        XCTAssertFalse(sitRep.flag)
+        
+
+    }
     
     func testCrown()   {
         

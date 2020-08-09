@@ -306,6 +306,37 @@ public struct Arc: PenCurve, Equatable   {
     }
     
 
+    /// Check whether a point is or isn't perched on the curve.
+    /// - Parameters:
+    ///   - speck:  Point near the curve.
+    /// - Returns: Flag, and optional parameter value
+    /// - See: 'testPerch' under ArcTests
+    public func isPerchFor(speck: Point3D) throws -> (flag: Bool, param: Double?)   {
+        
+        /// The target point in the local coordinate system
+        let speckLocal = speck.transform(xirtam: self.fromGlobal)
+        
+        if abs(speckLocal.z) > Point3D.Epsilon    { return (false, nil) }
+
+           // Shortcuts!
+        if speck == self.startPt   { return (true, self.parameterRange.lowerBound) }
+        let endPt = self.pointAtAngle(theta: self.sweepAngle)
+        
+        if speckLocal == endPt   { return (true, self.parameterRange.upperBound) }
+        
+        let speckRad = Point3D.dist(pt1: self.center, pt2: speck)
+        
+        if abs(speckRad - self.radius) > Point3D.Epsilon { return (false, nil) }
+        else   {
+            let hAxis = try! LineSeg(end1: self.center, end2: self.startPt)
+            let relPos = hAxis.resolveRelative(speck: speck)
+            let speckAngle = atan2(relPos.away, relPos.along)
+            if speckAngle < self.sweepAngle { return (true, speckAngle / sweepAngle)}
+        }
+        
+        return (false, nil)
+    }
+    
     /// Untested version
     public func transform(xirtam: Transform) throws -> PenCurve {
         

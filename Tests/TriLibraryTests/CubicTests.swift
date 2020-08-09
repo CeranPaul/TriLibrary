@@ -330,6 +330,36 @@ class CubicTests: XCTestCase {
 
     }
     
+    func testPerch()   {
+        
+        let pt1 = Point3D(x: -1.2, y: 0.39, z: 1.0)
+        let pt2 = Point3D(x: -1.2, y: 0.71, z: 0.65)
+        let pt3 = Point3D(x: -1.2, y: 0.98, z: 0.42)
+        let pt4 = Point3D(x: -1.2, y: 1.24, z: 0.31)
+
+        let rolling = try! Cubic(alpha: pt1, beta: pt2, betaFraction: 0.39, gamma: pt3, gammaFraction: 0.65, delta: pt4)
+        
+        let t1 = Point3D(x: -1.2, y: 0.01, z: -0.2)
+        
+        var sitRep = try! rolling.isPerchFor(speck: t1)
+        
+        XCTAssertFalse(sitRep.flag)
+        
+           // Set up a point known to be on the curve
+        let tunnelEnd = try! rolling.pointAt(t: 0.22)
+        
+        let t2 = Point3D(x: -1.2, y: 0.5448, z: 0.8165)
+        
+        sitRep = try! rolling.isPerchFor(speck: t2)
+        XCTAssert(sitRep.flag)
+        
+        let t3 = Point3D(x: -1.2, y: 1.25, z: 0.30)
+        
+        sitRep = try! rolling.isPerchFor(speck: t3)
+        XCTAssertFalse(sitRep.flag)
+        
+    }
+    
     func testIntersect()   {
         
         let pt1 = Point3D(x: -1.2, y: 0.39, z: 0.0)
