@@ -257,6 +257,70 @@ public struct Cubic: PenCurve   {
     }
     
     
+    /// Build from a location, it's tangency, and two other locations
+    public init(alpha: Point3D, alphaPrime: Vector3D, beta: Point3D, betaFraction: Double, gamma: Point3D)  {
+        
+        // Copied from other initializer code for a Cubic
+
+        // Rearrange coordinates into an array
+        let rowX = SIMD4<Double>(alpha.x, alphaPrime.i, beta.x, gamma.x)
+        let rowY = SIMD4<Double>(alpha.y, alphaPrime.j, beta.y, gamma.y)
+        let rowZ = SIMD4<Double>(alpha.z, alphaPrime.k, beta.z, gamma.z)
+        
+        // Build a 4x4 of parameter values to various powers
+        let row1 = SIMD4<Double>(0.0, 0.0, 0.0, 1.0)
+        
+        let row2 = SIMD4<Double>(0.0, 0.0, 1.0, 0.0)
+
+        let betaFraction2 = betaFraction * betaFraction
+        let row3 = SIMD4<Double>(betaFraction * betaFraction2, betaFraction2, betaFraction, 1.0)
+        
+        let gammaFraction = 1.0
+        let gammaFraction2 = gammaFraction * gammaFraction
+        let row4 = SIMD4<Double>(gammaFraction * gammaFraction2, gammaFraction2, gammaFraction, 1.0)
+        
+        
+        /// Intermediate collection for building the matrix
+        var partial: [SIMD4<Double>]
+        partial = [row1, row2, row3, row4]
+        
+        /// Matrix of t from several points raised to various powers
+        let tPowers = double4x4(partial)
+        
+        let trans = tPowers.transpose   // simd representation is different than what I had in college
+        
+        
+        /// Inverse of the above matrix
+        let nvers = trans.inverse
+        
+        let coeffX = nvers * rowX
+        let coeffY = nvers * rowY
+        let coeffZ = nvers * rowZ
+        
+        /// The resulting curve
+        self.ax = coeffX[0]
+        self.bx = coeffX[1]
+        self.cx = coeffX[2]
+        self.dx = coeffX[3]
+        self.ay = coeffY[0]
+        self.by = coeffY[1]
+        self.cy = coeffY[2]
+        self.dy = coeffY[3]
+        self.az = coeffZ[0]
+        self.bz = coeffZ[1]
+        self.cz = coeffZ[2]
+        self.dz = coeffZ[3]
+        
+        self.ptAlpha = alpha
+        self.ptOmega = beta
+        
+        self.parameterRange = ClosedRange<Double>(uncheckedBounds: (lower: 0.0, upper: betaFraction))
+        
+        self.usage = "Ordinary"
+                
+    }
+    
+    
     /// Generate the 12 coefficiients that define the curve
     private mutating func genCoeff(alpha: Point3D, beta: Point3D, betaFraction: Double, gamma: Point3D, gammaFraction: Double, delta: Point3D) -> Void   {
         
