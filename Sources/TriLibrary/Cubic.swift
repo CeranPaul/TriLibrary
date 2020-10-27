@@ -428,7 +428,7 @@ public struct Cubic: PenCurve   {
     /// - Throws:
     ///     - ParameterRangeError if the input is lame
     /// - See: 'testTangentAt' under CubicTests
-    func tangentAt(t: Double) throws -> Vector3D   {
+    public func tangentAt(t: Double) throws -> Vector3D   {
         
         guard self.parameterRange.contains(t) else { throw ParameterRangeError(parA: t) }
         
