@@ -47,7 +47,7 @@ public struct Cubic: PenCurve   {
     public var usage: String
     
     /// Limited to be bettween 0.0 and 1.0
-    public var parameterRange: ClosedRange<Double>
+    public var trimParameters: ClosedRange<Double>
     
     
     
@@ -82,7 +82,7 @@ public struct Cubic: PenCurve   {
         
         self.usage = "Ordinary"
         
-        self.parameterRange = ClosedRange<Double>(uncheckedBounds: (lower: 0.0, upper: 1.0))
+        self.trimParameters = ClosedRange<Double>(uncheckedBounds: (lower: 0.0, upper: 1.0))
         
     }
     
@@ -127,7 +127,7 @@ public struct Cubic: PenCurve   {
         
         self.usage = "Ordinary"
         
-        self.parameterRange = ClosedRange<Double>(uncheckedBounds: (lower: 0.0, upper: 1.0))
+        self.trimParameters = ClosedRange<Double>(uncheckedBounds: (lower: 0.0, upper: 1.0))
         
     }
     
@@ -172,7 +172,7 @@ public struct Cubic: PenCurve   {
         
         self.usage = "Ordinary"
         
-        self.parameterRange = ClosedRange<Double>(uncheckedBounds: (lower: 0.0, upper: 1.0))
+        self.trimParameters = ClosedRange<Double>(uncheckedBounds: (lower: 0.0, upper: 1.0))
         
     }
     
@@ -189,10 +189,10 @@ public struct Cubic: PenCurve   {
     ///     - CoincidentPointsError if they are not unique
     public init(alpha: Point3D, beta: Point3D, betaFraction: Double, gamma: Point3D, gammaFraction: Double, delta: Point3D) throws  {
         
-        self.parameterRange = ClosedRange<Double>(uncheckedBounds: (lower: 0.0, upper: 1.0))
+        self.trimParameters = ClosedRange<Double>(uncheckedBounds: (lower: 0.0, upper: 1.0))
         
-        guard self.parameterRange.contains(betaFraction) else { throw ParameterRangeError(parA: betaFraction) }
-        guard self.parameterRange.contains(gammaFraction) else { throw ParameterRangeError(parA: gammaFraction) }
+        guard self.trimParameters.contains(betaFraction) else { throw ParameterRangeError(parA: betaFraction) }
+        guard self.trimParameters.contains(gammaFraction) else { throw ParameterRangeError(parA: gammaFraction) }
         
         let pool = [alpha, beta, gamma, delta]
         guard Point3D.isUniquePool(flock: pool) else { throw CoincidentPointsError(dupePt: alpha)}
@@ -314,7 +314,7 @@ public struct Cubic: PenCurve   {
         self.ptAlpha = alpha
         self.ptOmega = beta
         
-        self.parameterRange = ClosedRange<Double>(uncheckedBounds: (lower: 0.0, upper: betaFraction))
+        self.trimParameters = ClosedRange<Double>(uncheckedBounds: (lower: 0.0, upper: betaFraction))
         
         self.usage = "Ordinary"
                 
@@ -386,14 +386,38 @@ public struct Cubic: PenCurve   {
     /// - See: 'getOtherEnd()'
     /// - See: 'testGetters' under CubicTests
     public func getOneEnd() -> Point3D   {
-        return ptAlpha
+        let startParam = self.trimParameters.lowerBound
+        return try! self.pointAt(t: startParam)
     }
     
     /// Fetch the location of the opposite end.
     /// - See: 'getOneEnd()'
     /// - See: 'testGetters' under CubicTests
     public func getOtherEnd() -> Point3D   {
-        return ptOmega
+        let finishParam = self.trimParameters.upperBound
+        return try! self.pointAt(t: finishParam)
+    }
+    
+    /// Needs some range checks relative to the other trim
+    public mutating func setLowerTrim (freshT: Double) throws -> Void   {
+        
+        guard freshT >= 0.0 else { throw ParameterRangeError(parA: freshT) }
+        guard freshT <= 1.0 else { throw ParameterRangeError(parA: freshT) }
+
+        let freshBounds = ClosedRange<Double>(uncheckedBounds: (lower: freshT, upper: self.trimParameters.upperBound))
+        self.trimParameters = freshBounds
+        
+    }
+    
+    /// Needs some range checks relative to the other trim
+    public mutating func setUpperTrim (freshT: Double) throws -> Void   {
+        
+        guard freshT >= 0.0 else { throw ParameterRangeError(parA: freshT) }
+        guard freshT <= 1.0 else { throw ParameterRangeError(parA: freshT) }
+
+        let freshBounds = ClosedRange<Double>(uncheckedBounds: (lower: self.trimParameters.lowerBound, upper: freshT))
+        self.trimParameters = freshBounds
+        
     }
     
     /// Supply the point on the curve for the input parameter value.
@@ -406,7 +430,9 @@ public struct Cubic: PenCurve   {
     /// - See: 'testPointAt' under CubicTests
     public func pointAt(t: Double) throws -> Point3D   {
         
-        guard self.parameterRange.contains(t) else { throw ParameterRangeError(parA: t) }
+        let absoluteRange = ClosedRange<Double>(uncheckedBounds: (lower: 0.0, upper: 1.0))
+        
+        guard absoluteRange.contains(t) else { throw ParameterRangeError(parA: t) }
         
         let t2 = t * t
         let t3 = t2 * t
@@ -430,7 +456,9 @@ public struct Cubic: PenCurve   {
     /// - See: 'testTangentAt' under CubicTests
     public func tangentAt(t: Double) throws -> Vector3D   {
         
-        guard self.parameterRange.contains(t) else { throw ParameterRangeError(parA: t) }
+        let absoluteRange = ClosedRange<Double>(uncheckedBounds: (lower: 0.0, upper: 1.0))
+        
+        guard absoluteRange.contains(t) else { throw ParameterRangeError(parA: t) }
         
         let t2 = t * t
         
@@ -444,10 +472,13 @@ public struct Cubic: PenCurve   {
     
     
     /// Report the length of the entire curve.
+    /// Perhaps should depend on allowableCrown.
     public func getLength() -> Double   {
         
-        let dots = self.dice()
+        // Points every 0.01 in parameter space
+        let dots = self.dice()   // Is it a good or bad idea to use 'approximate' here?
         
+        /// Return value for length
         var total = 0.0
         
         for g in 1..<dots.count   {
@@ -460,6 +491,7 @@ public struct Cubic: PenCurve   {
     
 
     /// Break into 20 pieces and sum up the distances
+    /// Shouldn't be used anywhere
     /// - Parameters:
     ///   - t:  Optional curve parameter value.  Assumed 0 < t < 1.
     /// - Throws:
@@ -467,7 +499,7 @@ public struct Cubic: PenCurve   {
     /// - Returns: Double that is an approximate length
     public func findLength(t: Double = 1.0) throws -> Double   {
         
-        guard self.parameterRange.contains(t) else { throw ParameterRangeError(parA: t) }
+        guard self.trimParameters.contains(t) else { throw ParameterRangeError(parA: t) }
         
 
         let pieces = 20
@@ -499,14 +531,14 @@ public struct Cubic: PenCurve   {
         public func isPerchFor(speck: Point3D) throws -> (flag: Bool, param: Double?)   {
             
                // Shortcuts!
-            if speck == self.ptAlpha   { return (true, self.parameterRange.lowerBound) }
-            if speck == self.ptOmega   { return (true, self.parameterRange.upperBound) }
+            if speck == self.ptAlpha   { return (true, self.trimParameters.lowerBound) }
+            if speck == self.ptOmega   { return (true, self.trimParameters.upperBound) }
             
             /// True length along the curve
             let curveLength = self.getLength()
             
             /// Points along the curve
-            let crumbs = self.diceRange(pristine: self.parameterRange, chunks: 40)
+            let crumbs = self.diceRange(pristine: self.trimParameters, chunks: 40)
             
             /// Distances to the target point (and parameter ranges)
             let seps = crumbs.map( { rangeDist(egnar: $0, curve: self, awaySpeck: speck) } )
@@ -756,7 +788,7 @@ public struct Cubic: PenCurve   {
         /// The array to be returned
         var pearls = [Point3D]()
         
-        for g in stride(from: 0.0, through: 1.0, by: 0.01)   {
+        for g in stride(from: self.trimParameters.lowerBound, through: self.trimParameters.upperBound, by: 0.01)   {
             let pip = try! self.pointAt(t: g)
             pearls.append(pip)
         }
@@ -974,7 +1006,7 @@ public struct Cubic: PenCurve   {
         
         guard allowableCrown > 0.0 else { throw NegativeAccuracyError(acc: allowableCrown) }
             
-        guard self.parameterRange.contains(currentT) else { throw ParameterRangeError(parA: currentT) }
+        guard self.trimParameters.contains(currentT) else { throw ParameterRangeError(parA: currentT) }
 
         //TODO: This needs testing for boundary conditions and the decreasing flag condition.
 
@@ -1035,8 +1067,8 @@ public struct Cubic: PenCurve   {
     /// - See: 'testFindCrown' under CubicTests
     public func findCrown(smallerT: Double, largerT: Double) throws -> Double   {
         
-        guard self.parameterRange.contains(smallerT) else { throw ParameterRangeError(parA: smallerT) }
-        guard self.parameterRange.contains(largerT) else { throw ParameterRangeError(parA: largerT) }
+        guard self.trimParameters.contains(smallerT) else { throw ParameterRangeError(parA: smallerT) }
+        guard self.trimParameters.contains(largerT) else { throw ParameterRangeError(parA: largerT) }
 
         /// Number of divisions to generate and check
         var count = 20
@@ -1147,7 +1179,7 @@ public struct Cubic: PenCurve   {
         var successiveSep = Double.greatestFiniteMagnitude   // Starting value
         
         /// Working value for interval on the curve being checked
-        var curRange = self.parameterRange
+        var curRange = self.trimParameters
         
         /// Working parameter through the iterations, and part of the return tuple.
         var midRangeParameter: Double = 0.5
@@ -1189,9 +1221,9 @@ public struct Cubic: PenCurve   {
     public func refineRangeDist(nearby: Point3D, span: ClosedRange<Double>) throws -> ClosedRange<Double>?   {
         
         // Would be good to check that 'span' is a valid range.
-        guard self.parameterRange.contains(span.lowerBound) else { throw ParameterRangeError(parA: span.lowerBound)}
+        guard self.trimParameters.contains(span.lowerBound) else { throw ParameterRangeError(parA: span.lowerBound)}
         
-        guard self.parameterRange.contains(span.upperBound) else { throw ParameterRangeError(parA: span.upperBound)}
+        guard self.trimParameters.contains(span.upperBound) else { throw ParameterRangeError(parA: span.upperBound)}
         
         /// Number of pieces to divide range
         let chunks = 10  // What's the most efficient number?

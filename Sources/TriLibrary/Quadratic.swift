@@ -36,7 +36,7 @@ public struct Quadratic: PenCurve   {
     
     public var usage: String
     
-    public var parameterRange: ClosedRange<Double>
+    public var trimParameters: ClosedRange<Double>
     
     
     /// Build from two end points and a control point.
@@ -76,16 +76,16 @@ public struct Quadratic: PenCurve   {
 
         self.usage = "Ordinary"
         
-        self.parameterRange = ClosedRange<Double>(uncheckedBounds: (lower: 0.0, upper: 1.0))
+        self.trimParameters = ClosedRange<Double>(uncheckedBounds: (lower: 0.0, upper: 1.0))
         
     }
     
     /// Needed for transforms and offsets
     init(ptA: Point3D, beta: Point3D, betaFraction: Double, ptC: Point3D) throws   {
         
-        self.parameterRange = ClosedRange<Double>(uncheckedBounds: (lower: 0.0, upper: 1.0))
+        self.trimParameters = ClosedRange<Double>(uncheckedBounds: (lower: 0.0, upper: 1.0))
         
-        guard self.parameterRange.contains(betaFraction) else { throw ParameterRangeError(parA: betaFraction) }
+        guard self.trimParameters.contains(betaFraction) else { throw ParameterRangeError(parA: betaFraction) }
         
         let pool = [ptA, beta, ptC]
         guard Point3D.isUniquePool(flock: pool) else { throw CoincidentPointsError(dupePt: ptA)}
@@ -149,7 +149,9 @@ public struct Quadratic: PenCurve   {
     ///     - ParameterRangeError if the input is lame
     public func pointAt(t: Double) throws -> Point3D {
         
-        guard self.parameterRange.contains(t) else { throw ParameterRangeError(parA: t) }
+        let absoluteRange = ClosedRange<Double>(uncheckedBounds: (lower: 0.0, upper: 1.0))
+        
+        guard absoluteRange.contains(t) else { throw ParameterRangeError(parA: t) }
         
         let t2 = t * t
 
@@ -215,7 +217,9 @@ public struct Quadratic: PenCurve   {
     ///     - ParameterRangeError if the input is lame
     public func tangentAt(t: Double) throws -> Vector3D   {
         
-        guard self.parameterRange.contains(t) else { throw ParameterRangeError(parA: t) }
+        let absoluteRange = ClosedRange<Double>(uncheckedBounds: (lower: 0.0, upper: 1.0))
+        
+        guard absoluteRange.contains(t) else { throw ParameterRangeError(parA: t) }
         
         // This is the component matrix differentiated once
         let myI = 2.0 * ax * t + bx
@@ -234,14 +238,14 @@ public struct Quadratic: PenCurve   {
     public func isPerchFor(speck: Point3D) throws -> (flag: Bool, param: Double?)   {
         
            // Shortcuts!
-        if speck == self.ptAlpha   { return (true, self.parameterRange.lowerBound) }
-        if speck == self.ptOmega   { return (true, self.parameterRange.upperBound) }
+        if speck == self.ptAlpha   { return (true, self.trimParameters.lowerBound) }
+        if speck == self.ptOmega   { return (true, self.trimParameters.upperBound) }
         
         /// True length along the curve
         let curveLength = self.getLength()
         
         /// Points along the curve
-        let crumbs = Quadratic.diceRange(pristine: self.parameterRange, chunks: 40)
+        let crumbs = Quadratic.diceRange(pristine: self.trimParameters, chunks: 40)
         
         /// Distances to the target point (and parameter ranges)
         let seps = crumbs.map( { rangeDist(egnar: $0, curve: self, awaySpeck: speck) } )
@@ -348,8 +352,8 @@ public struct Quadratic: PenCurve   {
     /// - See: 'testFindCrown' under CubicTests
     public func findCrown(smallerT: Double, largerT: Double) throws -> Double   {
         
-        guard self.parameterRange.contains(smallerT) else { throw ParameterRangeError(parA: smallerT) }
-        guard self.parameterRange.contains(largerT) else { throw ParameterRangeError(parA: largerT) }
+        guard self.trimParameters.contains(smallerT) else { throw ParameterRangeError(parA: smallerT) }
+        guard self.trimParameters.contains(largerT) else { throw ParameterRangeError(parA: largerT) }
 
         /// Number of divisions to generate and check
         var count = 20
@@ -403,7 +407,7 @@ public struct Quadratic: PenCurve   {
         
         guard allowableCrown > 0.0 else { throw NegativeAccuracyError(acc: allowableCrown) }
             
-        guard self.parameterRange.contains(currentT) else { throw ParameterRangeError(parA: currentT) }
+        guard self.trimParameters.contains(currentT) else { throw ParameterRangeError(parA: currentT) }
 
         //TODO: This needs testing for boundary conditions and the decreasing flag condition.
 
@@ -693,12 +697,12 @@ public struct Quadratic: PenCurve   {
     /// - Returns: Array of Point3D.
     public func dice(pieces: Int) -> [Point3D]   {
         
-        let interval = (self.parameterRange.upperBound - self.parameterRange.lowerBound) / Double(pieces)
+        let interval = (self.trimParameters.upperBound - self.trimParameters.lowerBound) / Double(pieces)
         
         /// The array to be returned
         var pearls = [Point3D]()
         
-        for g in stride(from: self.parameterRange.lowerBound, through: self.parameterRange.upperBound, by: interval)   {
+        for g in stride(from: self.trimParameters.lowerBound, through: self.trimParameters.upperBound, by: interval)   {
             let pip = try! self.pointAt(t: g)
             pearls.append(pip)
         }

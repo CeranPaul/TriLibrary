@@ -25,7 +25,7 @@ public struct Arc: PenCurve, Equatable   {
     var sweepAngle: Double
     
     /// Limited to be bettween 0.0 and 1.0
-    public var parameterRange: ClosedRange<Double>
+    public var trimParameters: ClosedRange<Double>
     
     /// The enum that hints at the meaning of the curve
     public var usage: String
@@ -81,7 +81,7 @@ public struct Arc: PenCurve, Equatable   {
         self.sweepAngle = sweep
         
         
-        self.parameterRange = ClosedRange<Double>(uncheckedBounds: (lower: 0.0, upper: 1.0))
+        self.trimParameters = ClosedRange<Double>(uncheckedBounds: (lower: 0.0, upper: 1.0))
         
         self.radius = Point3D.dist(pt1: ctr, pt2: start)
         
@@ -152,7 +152,7 @@ public struct Arc: PenCurve, Equatable   {
             self.sweepAngle = endAngle - Double.pi * 2.0
         }
         
-        self.parameterRange = ClosedRange<Double>(uncheckedBounds: (lower: 0.0, upper: 1.0))
+        self.trimParameters = ClosedRange<Double>(uncheckedBounds: (lower: 0.0, upper: 1.0))
         
         self.usage = "Ordinary"
         
@@ -319,10 +319,10 @@ public struct Arc: PenCurve, Equatable   {
         if abs(speckLocal.z) > Point3D.Epsilon    { return (false, nil) }
 
            // Shortcuts!
-        if speck == self.startPt   { return (true, self.parameterRange.lowerBound) }
+        if speck == self.startPt   { return (true, self.trimParameters.lowerBound) }
         let endPt = self.pointAtAngle(theta: self.sweepAngle)
         
-        if speckLocal == endPt   { return (true, self.parameterRange.upperBound) }
+        if speckLocal == endPt   { return (true, self.trimParameters.upperBound) }
         
         let speckRad = Point3D.dist(pt1: self.center, pt2: speck)
         

@@ -16,7 +16,7 @@ public protocol PenCurve   {
     var usage: String   { get set }
     
     /// Used for error checking
-    var parameterRange: ClosedRange<Double>   { get set }
+    var trimParameters: ClosedRange<Double>   { get set }
     
     /// Supply the point on the curve for the input parameter value
     func pointAt(t: Double) throws -> Point3D

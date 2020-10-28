@@ -20,7 +20,7 @@ public struct LineSeg: PenCurve, Equatable {
     /// The String that hints at the meaning of the curve
     public var usage: String
     
-    public var parameterRange: ClosedRange<Double>
+    public var trimParameters: ClosedRange<Double>
     
     
     /// Build a line segment from two points
@@ -36,7 +36,7 @@ public struct LineSeg: PenCurve, Equatable {
         
         self.usage = "Ordinary"
         
-        self.parameterRange = ClosedRange<Double>(uncheckedBounds: (lower: 0.0, upper: 1.0))
+        self.trimParameters = ClosedRange<Double>(uncheckedBounds: (lower: 0.0, upper: 1.0))
         
     }
     
@@ -127,7 +127,7 @@ public struct LineSeg: PenCurve, Equatable {
     /// - See: 'testPointAt' under LineSegTests
     public func pointAt(t: Double) throws -> Point3D  {
         
-        guard self.parameterRange.contains(t) else { throw ParameterRangeError(parA: t) }
+        guard self.trimParameters.contains(t) else { throw ParameterRangeError(parA: t) }
         
 
         let wholeVector = Vector3D.built(from: self.endAlpha, towards: self.endOmega, unit: false)
@@ -148,8 +148,8 @@ public struct LineSeg: PenCurve, Equatable {
     public func isPerchFor(speck: Point3D) throws -> (flag: Bool, param: Double?)   {
         
            // Shortcuts!
-        if speck == self.endAlpha   { return (true, self.parameterRange.lowerBound) }
-        if speck == self.endOmega   { return (true, self.parameterRange.upperBound) }
+        if speck == self.endAlpha   { return (true, self.trimParameters.lowerBound) }
+        if speck == self.endOmega   { return (true, self.trimParameters.upperBound) }
         
         /// True length along the curve
         let curveLength = self.getLength()
