@@ -260,8 +260,6 @@ public struct Cubic: PenCurve   {
     /// Build from a location, it's tangency, and two other locations
     public init(alpha: Point3D, alphaPrime: Vector3D, beta: Point3D, betaFraction: Double, gamma: Point3D)  {
         
-        // Copied from other initializer code for a Cubic
-
         // Rearrange coordinates into an array
         let rowX = SIMD4<Double>(alpha.x, alphaPrime.i, beta.x, gamma.x)
         let rowY = SIMD4<Double>(alpha.y, alphaPrime.j, beta.y, gamma.y)
@@ -373,6 +371,46 @@ public struct Cubic: PenCurve   {
         self.cz = coeffZ[2]
         self.dz = coeffZ[3]
         
+    }
+    
+    
+    /// Create a String with X coefficient values to be printed
+    public func coeffX() -> String   {
+        
+        let axF = String(format: "%.3f", self.ax)
+        let bxF = String(format: "%.3f", self.bx)
+        let cxF = String(format: "%.3f", self.cx)
+        let dxF = String(format: "%.3f", self.dx)
+
+        let gnirts = "X:  " + axF + "  " + bxF + "  " + cxF + "  " + dxF
+        
+        return gnirts
+    }
+    
+    /// Create a String with Y coefficient values to be printed
+    public func coeffY() -> String   {
+        
+        let ayF = String(format: "%.3f", self.ay)
+        let byF = String(format: "%.3f", self.by)
+        let cyF = String(format: "%.3f", self.cy)
+        let dyF = String(format: "%.3f", self.dy)
+
+        let gnirts = "Y:  " + ayF + "  " + byF + "  " + cyF + "  " + dyF
+        
+        return gnirts
+    }
+    
+    /// Create a String with Z coefficient values to be printed
+    public func coeffZ() -> String   {
+        
+        let azF = String(format: "%.3f", self.az)
+        let bzF = String(format: "%.3f", self.bz)
+        let czF = String(format: "%.3f", self.cz)
+        let dzF = String(format: "%.3f", self.dz)
+
+        let gnirts = "Z:  " + azF + "  " + bzF + "  " + czF + "  " + dzF
+        
+        return gnirts
     }
     
     /// Attach new meaning to the curve.
