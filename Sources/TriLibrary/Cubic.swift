@@ -717,6 +717,8 @@ public struct Cubic: PenCurve   {
 
         
         var fresh = try! Cubic(alpha: tAlpha, beta: beta, betaFraction: t1, gamma: gamma, gammaFraction: t2, delta: tOmega)
+        try! fresh.setLowerTrim(freshT: self.trimParameters.lowerBound)   // Transfer the limits
+        try! fresh.setUpperTrim(freshT: self.trimParameters.upperBound)
         fresh.setIntent(purpose: self.usage)   // Copy setting instead of having the default
         
         return fresh

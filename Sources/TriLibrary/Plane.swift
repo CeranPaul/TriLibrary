@@ -99,6 +99,47 @@ public struct Plane: Equatable   {
     }
     
     
+    /// Flip points to the opposite side of the plane
+    /// - Parameters:
+    ///   - flat:  Mirroring plane
+    ///   - pip:  Point to be flipped
+    /// - Returns: New point
+    public static func mirror(flat: Plane, pip: Point3D) -> Point3D   {
+        
+        let comps = Plane.resolveRelativeVec(flat: flat, pip: pip)
+        
+        let jump = comps.perp * -2.0
+        let fairest = Point3D.offset(pip: pip, jump: jump)
+        
+        return fairest
+    }
+    
+    
+    /// Flip line segment to the opposite side of the plane
+    /// - Parameters:
+    ///   - flat:  Mirroring plane
+    ///   - wire:  LineSeg to be flipped
+    /// - Returns: New LineSeg
+    public static func mirror(flat: Plane, wire: LineSeg) -> LineSeg   {
+        
+        var pip: Point3D = wire.getOneEnd()
+        var comps = Plane.resolveRelativeVec(flat: flat, pip: pip)
+        
+        var jump = comps.perp * -2.0
+        let fairest1 = Point3D.offset(pip: pip, jump: jump)
+        
+        pip = wire.getOtherEnd()
+        comps = Plane.resolveRelativeVec(flat: flat, pip: pip)
+        
+        jump = comps.perp * -2.0
+        let fairest2 = Point3D.offset(pip: pip, jump: jump)
+        
+        let rail = try! LineSeg(end1: fairest1, end2: fairest2)
+        
+        return rail
+    }
+    
+    
     /// Check to see that the line direction is perpendicular to the normal
     /// - Parameters:
     ///   - flat:  Reference plane
@@ -111,6 +152,7 @@ public struct Plane: Equatable   {
         
         return abs(perp) < Vector3D.EpsilonV
     }
+    
     
     /// Check to see that the line is parallel to the plane, and lies on it
     /// - Parameters:
