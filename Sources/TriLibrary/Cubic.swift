@@ -257,7 +257,8 @@ public struct Cubic: PenCurve   {
     }
     
     
-    /// Build from a location, it's tangency, and two other locations
+    /// Build from a location, it's tangency, and two other locations.
+    /// The intent is that only alpha through beta will get used.
     public init(alpha: Point3D, alphaPrime: Vector3D, beta: Point3D, betaFraction: Double, gamma: Point3D)  {
         
         // Rearrange coordinates into an array
@@ -310,7 +311,7 @@ public struct Cubic: PenCurve   {
         self.dz = coeffZ[3]
         
         self.ptAlpha = alpha
-        self.ptOmega = beta
+        self.ptOmega = gamma
         
         self.trimParameters = ClosedRange<Double>(uncheckedBounds: (lower: 0.0, upper: betaFraction))
         
