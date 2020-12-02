@@ -1042,7 +1042,7 @@ public struct Cubic: PenCurve   {
     ///     - NegativeAccuracyError for bad allowable crown
     ///     - ParameterRangeError if currentT is lame
     ///     - ConvergenceError if no new value can be found
-    public func findStep(allowableCrown: Double, currentT: Double, increasing: Bool) throws -> Double   {
+    public func findStep(allowableCrown: Double, currentT: Double) throws -> Double   {
         
         guard allowableCrown > 0.0 else { throw NegativeAccuracyError(acc: allowableCrown) }
             
@@ -1051,14 +1051,10 @@ public struct Cubic: PenCurve   {
         //TODO: This needs testing for boundary conditions and the decreasing flag condition.
 
         /// How quickly to refine the parameter guess
-        let factor = 1.60
+        let divisor = 1.60
         
         /// Change in parameter - constantly refined.
-        var step = 1.0 - currentT
-        
-        if !increasing   {
-            step = -0.9999 * currentT   // I don't remember why that couldn't be -1.0
-        }
+        var step = self.trimParameters.upperBound - currentT
         
         /// Working value of the parameter
         var trialT: Double
@@ -1071,21 +1067,14 @@ public struct Cubic: PenCurve   {
         
         repeat   {
             
-            if increasing   {
-                trialT = currentT + step
-                if currentT > (1.0 - step)   {   // Prevent parameter value > 1.0
-                    trialT = 1.0
-                }
-            }  else {
-                trialT = currentT - step
-                if currentT < step   {   // Prevent parameter value < 0.0
-                    trialT = 0.0
-                }
+            trialT = currentT + step
+            if currentT > (self.trimParameters.upperBound - step)   {   // Prevent parameter value > curve limits
+                trialT = self.trimParameters.upperBound
             }
             
             deviation = try! self.findCrown(smallerT: currentT, largerT: trialT)
 
-            step = step / factor     // Prepare for the next iteration
+            step = step / divisor     // Prepare for the next iteration
             safety += 1
             
         }  while deviation > allowableCrown  && safety < 16    // Fails ugly!
@@ -1183,12 +1172,12 @@ public struct Cubic: PenCurve   {
         /// Collection of points to be returned
         var chain = [Point3D]()
         
-        var currentT = 0.0   // Starting value
+        var currentT = self.trimParameters.lowerBound   // Starting value
         let startPoint = try self.pointAt(t: currentT)
         chain.append(startPoint)
         
-        while currentT < 1.0   {
-            let primoT = try findStep(allowableCrown: allowableCrown, currentT: currentT, increasing: true)
+        while currentT < self.trimParameters.upperBound   {
+            let primoT = try findStep(allowableCrown: allowableCrown, currentT: currentT)
             let milestone = try self.pointAt(t: primoT)
             chain.append(milestone)
             currentT = primoT
