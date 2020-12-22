@@ -184,7 +184,8 @@ public struct Plane: Equatable   {
         return  abs(distanceOffPlane) < Point3D.Epsilon
     }
     
-    /// Planes are parallel, and rhs location lies on lhs
+    /// Planes are parallel, and rhs location lies on lhs.
+    /// Normals may be opposite, and will still return true.
     /// - Parameters:
     ///   - lhs:  One plane for testing
     ///   - rhs:  Another plane for testing

@@ -205,17 +205,32 @@ public struct Arc: PenCurve, Equatable   {
         return self.sweepAngle
     }
     
-    /// Generate a point at the given angle
-    /// - Returns: A point in the local CSYS
-    public func pointAtAngle(theta: Double) -> Point3D   {
+    /// Generate a global point at the given angle
+    /// - Returns: A point in the global CSYS
+    public func pointAtAngleGlobal(theta: Double) -> Point3D   {
         
         //TODO: Range checking would be good
         let horiz = cos(theta) * self.radius
         let vert = sin(theta) * self.radius
         
-        let local = Point3D(x: horiz, y: vert, z: 0.0)
+        let localPt = Point3D(x: horiz, y: vert, z: 0.0)        
+        let globalPt = localPt.transform(xirtam: self.toGlobal)
         
-        return local
+        return globalPt
+    }
+    
+    
+    /// Generate a point at the given angle
+    /// - Returns: A point in the local CSYS
+    private func pointAtAngle(theta: Double) -> Point3D   {
+        
+        //TODO: Range checking would be good
+        let horiz = cos(theta) * self.radius
+        let vert = sin(theta) * self.radius
+        
+        let localPt = Point3D(x: horiz, y: vert, z: 0.0)
+        
+        return localPt
     }
     
     

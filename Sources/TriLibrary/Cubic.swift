@@ -49,7 +49,39 @@ public struct Cubic: PenCurve   {
     /// Limited to be bettween 0.0 and 1.0
     public var trimParameters: ClosedRange<Double>
     
-    
+    /// Tuple of points and distances from the lower parameter.
+    /// You want to compute this once, and not in the middle of using the Cubic.
+    public var pearls: (pip: [Point3D], dists: [Double], tees: [Double])  {
+        
+        let span = trimParameters.upperBound - trimParameters.lowerBound
+        let increment = span / 50.0
+        
+        ///Array of parameter values used
+        var params = [Double]()
+        
+        var beads = [Point3D]()
+        for g in 0..<50   {
+            let freshT = trimParameters.lowerBound + Double(g) * increment
+            params.append(freshT)
+            let pip = try! pointAt(t: freshT)   // Known to be in range
+            beads.append(pip)
+        }
+        
+        params.append(trimParameters.upperBound)
+        let tailEnd = try! pointAt(t: trimParameters.upperBound)
+        beads.append(tailEnd)
+        
+        var lengths = [Double]()
+        
+        lengths.append(0.0)
+        
+        for g in 1...50   {
+            let hop = lengths [g - 1] + Point3D.dist(pt1: beads[g - 1], pt2: beads[g])
+            lengths.append(hop)
+        }
+        
+        return (beads, lengths, params)   // Arrays of 51 elements that match
+    }
     
     
     /// Build from 12 individual parameters.
@@ -822,7 +854,7 @@ public struct Cubic: PenCurve   {
         return box
     }
     
-     /// Break the curve up into 100 segments. Used for equality checks.
+     /// Break the curve up into segments every 0.01 in parameter space.
     /// - Returns: Array of Point3D.
     public func dice() -> [Point3D]   {
         
@@ -1186,6 +1218,43 @@ public struct Cubic: PenCurve   {
         
         return chain
     }
+    
+    
+    /// Second derivative of the curve equation.
+    ///   - t:  Value of the driving parameter
+    /// - Returns: A non-normalized Vector3D.
+    /// - Throws:
+    ///     - ParameterRangeError if the input parameter is lame
+    public func deriv2(t: Double) throws -> Vector3D   {
+        
+        guard self.trimParameters.contains(t) else { throw ParameterRangeError(parA: t) }
+    
+        // This is the component matrix differentiated twice
+        let myI = 6.0 * ax * t + 2.0 * bx
+        let myJ = 6.0 * ay * t + 2.0 * by
+        let myK = 6.0 * az * t + 2.0 * bz
+    
+        return Vector3D(i: myI, j: myJ, k: myK)    // Notice that this is not normalized!
+    
+    }
+    
+    
+    /// Does not work!
+    /// Find the distance along the curve between two parameter values
+    /// - Parameters:
+    ///   - tSmall: A location on the curve
+    ///   - tLarge: Second location on the curve
+    /// - Throws:
+    ///     - ParameterRangeError if either input parameter is lame
+    public func trueLength(tSmall: Double, tLarge: Double) throws   {
+        
+        guard self.trimParameters.contains(tSmall) else { throw ParameterRangeError(parA: tSmall) }
+        guard self.trimParameters.contains(tLarge) else { throw ParameterRangeError(parA: tLarge) }
+
+        let span = tLarge - tSmall
+        
+    }
+
     
     
     /// Find the curve's closest point.
