@@ -222,7 +222,7 @@ public struct Arc: PenCurve, Equatable   {
     
     /// Generate a point at the given angle
     /// - Returns: A point in the local CSYS
-    private func pointAtAngle(theta: Double) -> Point3D   {
+    public func pointAtAngle(theta: Double) -> Point3D   {
         
         //TODO: Range checking would be good
         let horiz = cos(theta) * self.radius
