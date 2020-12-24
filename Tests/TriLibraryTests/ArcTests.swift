@@ -181,6 +181,33 @@ class ArcTests: XCTestCase {
 
     }
 
+    
+    /// Has some duplication with testFidelityThreePoints
+    func testInitCEE()   {
+        
+        let ctr = Point3D(x: 1.5, y: 4.0, z: 3.5)
+        let alpha = Point3D(x: 1.5, y: 6.0, z: 3.5)
+        let omega = Point3D(x: 1.5, y: 4.0, z: 5.5)
+        
+        let fourth = try! Arc(center: ctr, end1: alpha, end2: omega, useSmallAngle: true)
+        
+        XCTAssertEqual(fourth.getRadius(), 2.0, accuracy: 0.00001)
+        
+        let spinX = Vector3D(i: 1.0, j: 0.0, k: 0.0)
+        let spinY = Vector3D(i: 0.0, j: 1.0, k: 0.0)
+        
+        XCTAssertFalse(fourth.getAxisDir() == spinY)
+        
+        XCTAssert(fourth.getAxisDir() == spinX)
+        
+        XCTAssertEqual(Double.pi / 2.0, fourth.getSweepAngle(), accuracy: 0.0001)
+        
+        let htgnel = 2.0 * Double.pi * fourth.getRadius() / 4.0
+        XCTAssertEqual(fourth.getLength(), htgnel, accuracy: 0.001)
+        
+    }
+    
+
     /// Test the second initializer
     func testFidelityCASS()   {
         
@@ -363,6 +390,41 @@ class ArcTests: XCTestCase {
         
     }
     
+    func testApproximate()   {
+        
+        let up = Vector3D(i: 0.0, j: 0.0, k: 1.0)
+        let pivot = Point3D(x: 2.0, y: 1.0, z: 0.0)
+        let adam = Point3D(x: 3.5, y: 1.0, z: 0.0)
+        
+        let rainbow = try! Arc(ctr: pivot, axis: up, start: adam, sweep: Double.pi / 2.0)
+        
+        let hops = try! rainbow.approximate(allowableCrown: 0.001)
+        XCTAssert(Point3D.isUniquePool(flock: hops))
+        
+        XCTAssertNoThrow(try rainbow.approximate(allowableCrown: 0.001))
+        XCTAssertThrowsError(try rainbow.approximate(allowableCrown: -0.05))
+
+    }
+    
+    func testGetExtent()   {
+        
+        let up = Vector3D(i: 0.0, j: 0.0, k: 1.0)
+        let pivot = Point3D(x: 2.0, y: 1.0, z: 0.0)
+        let adam = Point3D(x: 3.5, y: 1.0, z: 0.0)
+        
+        let rainbow = try! Arc(ctr: pivot, axis: up, start: adam, sweep: Double.pi * 2.0)
+        
+        let brick = rainbow.getExtent()
+        print(brick.getOrigin())
+        
+        let minCorner = Point3D(x: 0.45, y: -0.55, z: -0.05)
+        let maxCorner = Point3D(x: 3.55, y: 2.55, z: 0.05)
+        let target = try! OrthoVol(corner1: minCorner, corner2: maxCorner)
+        
+        XCTAssert(OrthoVol.surrounds(big: target, little: rainbow.getExtent()))
+    }
+    
+    
     func testIntersect()   {
         
         let up = Vector3D(i: 0.0, j: 0.0, k: 1.0)
@@ -434,6 +496,30 @@ class ArcTests: XCTestCase {
 //
 //        XCTAssert(Line.isCoincident(straightA: ray2, pip: plop))
 //    }
+    
+    
+    func testOffset()   {
+        
+        let ctr = Point3D(x: 1.0, y: 1.0, z: 2.0)
+        let start = Point3D(x: 1.5, y: 1.0, z: 2.0)
+        let zee = Vector3D(i: 0.0, j: 0.0, k: 1.0)
+        
+        let cup = try! Arc(ctr: ctr, axis: zee, start: start, sweep: Double.pi / 2.0)
+        
+        let jug = try! Arc.offset(alpha: cup, delta: 0.3)
+        
+        XCTAssertEqual(jug.getRadius(), 0.80, accuracy: 0.00001)
+        
+        let straw = try! Arc.offset(alpha: cup, delta: -0.3)
+        
+        XCTAssertEqual(straw.getRadius(), 0.20, accuracy: 0.00001)
+        
+        XCTAssertThrowsError( try Arc.offset(alpha: cup, delta: -0.6) )
+        
+        XCTAssertThrowsError( try Arc.offset(alpha: cup, delta: -0.5) )
+        
+    }
+    
     
     func testPerch()   {
         

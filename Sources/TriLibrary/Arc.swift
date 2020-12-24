@@ -165,6 +165,26 @@ public struct Arc: PenCurve, Equatable   {
         
     }
     
+    /// Build a concentric Arc with larger or smaller radius
+    /// - Parameters:
+    ///   - alpha: Original Arc
+    ///   - delta: Increase in size
+    /// - Throws:
+    ///   - CoincidentPointsError for a reduction that would leave nothing but a point.
+    public static func offset(alpha: Arc, delta: Double) throws -> Arc  {
+        
+        guard delta > -1.0 * alpha.getRadius() else { throw CoincidentPointsError(dupePt: alpha.getCenter())  }
+        
+        /// Normalized vector towards the start of the Arc.
+        let thataway = Vector3D.built(from: alpha.getCenter(), towards: alpha.getOneEnd(), unit: true)
+         
+        let startOffset = Point3D.offset(pip: alpha.getOneEnd(), jump: thataway * delta)
+        
+        var freshArc = try! Arc(ctr: alpha.getCenter(), axis: alpha.getAxisDir(), start: startOffset, sweep: alpha.getSweepAngle())
+        
+        return freshArc
+    }
+    
     /// Attach new meaning to the curve
     /// - Parameter: purpose:PenTypes
     /// - See: 'testSetIntent' under ArcTests
@@ -181,7 +201,7 @@ public struct Arc: PenCurve, Equatable   {
     /// Fetch the location of an end
     /// - See: 'getOtherEnd()'
     public func getOneEnd() -> Point3D   {
-        return self.startPt
+        return self.startPt   // Doesn't need transformation, becuase it is regurgitating an input.
     }
     
     /// Fetch the location of the opposite end
@@ -189,7 +209,7 @@ public struct Arc: PenCurve, Equatable   {
     public func getOtherEnd() -> Point3D   {
         
         let localPt = self.pointAtAngle(theta: self.sweepAngle)
-        let globalEnd = localPt.transform(xirtam: self.toGlobal)
+        let globalEnd = localPt.transform(xirtam: self.toGlobal)   // Needs transformation because it is calculated in the local system.
         return globalEnd
     }
     
@@ -252,10 +272,11 @@ public struct Arc: PenCurve, Equatable   {
     public func getLength() -> Double   {
         
         let includedAngle = abs(getSweepAngle())
-        return includedAngle * Double.pi
+        return includedAngle * self.getRadius()
     }
     
     /// Figure the global brick that contains the curve
+    /// - See: 'testGetExtent' under ArcTests
     public func getExtent() -> OrthoVol   {
         
         let divs = 20.0
@@ -289,6 +310,7 @@ public struct Arc: PenCurve, Equatable   {
     /// - Returns: Array of evenly spaced points in the local coordinate system
     /// - Throws:
     ///     - NegativeAccuracyError for an input less than zero
+    /// - See: 'testApproximate' under ArcTests
     public func approximate(allowableCrown: Double) throws -> [Point3D]   {
         
         guard allowableCrown > 0.0 else { throw NegativeAccuracyError(acc: allowableCrown) }
