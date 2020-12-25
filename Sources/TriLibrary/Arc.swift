@@ -254,6 +254,9 @@ public struct Arc: PenCurve, Equatable   {
     }
     
     
+    /// Return a point based on its parameter, as contrasted to its angle.
+    /// - Parameters:
+    ///   - t: Parameter
     /// - Returns: A point in the global CSYS
     /// - See: 'testPointAt' under ArcTests
     public func pointAt(t: Double) throws -> Point3D   {
@@ -268,12 +271,14 @@ public struct Arc: PenCurve, Equatable   {
         return globalPt
     }
     
+    
     /// Figure the arc length
     public func getLength() -> Double   {
         
         let includedAngle = abs(getSweepAngle())
         return includedAngle * self.getRadius()
     }
+    
     
     /// Figure the global brick that contains the curve
     /// - See: 'testGetExtent' under ArcTests
@@ -304,6 +309,7 @@ public struct Arc: PenCurve, Equatable   {
         return brick
     }
     
+    
     /// Create only enough points for line segments tthat will meet the crown limit.
     /// - Parameters:
     ///   - allowableCrown: Maximum deviation from the actual curve
@@ -327,19 +333,22 @@ public struct Arc: PenCurve, Equatable   {
         let angleStep = self.sweepAngle / count
         
         
-        /// Collection of points to be returned
-        var chain = [Point3D]()
+        /// Collection of points in the local CSYS
+        var chainL = [Point3D]()
         
         let firstPt = pointAtAngle(theta: 0.0)
-        chain.append(firstPt)
+        chainL.append(firstPt)
         
         for index in 1...Int(count)   {
             let theta = Double(index) * angleStep
             let freshPt = pointAtAngle(theta: theta)
-            chain.append(freshPt)
+            chainL.append(freshPt)
         }
         
-        return chain
+        /// Points in the global CSYS
+        let chainG = chainL.map( { $0.transform(xirtam: self.toGlobal) } )
+        
+        return chainG
     }
     
 

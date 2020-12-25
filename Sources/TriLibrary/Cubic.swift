@@ -1211,8 +1211,8 @@ public struct Cubic: PenCurve   {
         
         while currentT < self.trimParameters.upperBound   {
             let primoT = try findStep(allowableCrown: allowableCrown, currentT: currentT)
-            let milestone = try self.pointAt(t: primoT)
-            chain.append(milestone)
+            let milestoneL = try self.pointAt(t: primoT)
+            chain.append(milestoneL)
             currentT = primoT
         }
         
