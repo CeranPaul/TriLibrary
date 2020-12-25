@@ -508,13 +508,13 @@ public struct Arc: PenCurve, Equatable   {
         
         guard allowableCrown > 0.0 else { throw NegativeAccuracyError(acc: allowableCrown) }
             
-        /// Array of points in the local coordinate system
+        /// Array of points in the global coordinate system
         let dots = try! self.approximate(allowableCrown: allowableCrown)
         
         /// Closure to generate a point for display
         let toScreen = { (spot: Point3D) -> CGPoint in
-            let global = spot.transform(xirtam: self.toGlobal)   // Transform from local to global CSYS
-            let asCG = CGPoint(x: global.x, y: global.y)   // Make a CGPoint
+//            let global = spot.transform(xirtam: self.toGlobal)   // Transform from local to global CSYS
+            let asCG = CGPoint(x: spot.x, y: spot.y)   // Make a CGPoint
             let onScreen = asCG.applying(tform)   // Shift and scale for screen
             return onScreen
         }
