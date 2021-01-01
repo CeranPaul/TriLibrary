@@ -3,7 +3,7 @@
 //  SketchCurves
 //
 //  Created by Paul on 11/3/15.
-//  Copyright © 2018 Ceran Digital Media. All rights reserved.  See LICENSE.md
+//  Copyright © 2021 Ceran Digital Media. All rights reserved.  See LICENSE.md
 //
 
 import XCTest
@@ -70,7 +70,7 @@ class LineSegTests: XCTestCase {
         
         let stroke = try! LineSeg(end1: alpha, end2: beta)
         
-        let trial = stroke.tangentAt(t: 0.5)   // Not normalized
+        let trial = try! stroke.tangentAt(t: 0.5)   // Not normalized
         
         let target = Vector3D(i: 0.0, j: 2.0, k: 0.0)
         

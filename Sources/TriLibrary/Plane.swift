@@ -1,9 +1,9 @@
 //
 //  Plane.swift
-//  SketchCurves
+//  TriLibrary
 //
 //  Created by Paul on 8/11/15.
-//  Copyright © 2018 Ceran Digital Media. All rights reserved.
+//  Copyright © 2021 Ceran Digital Media. All rights reserved.
 //
 
 import Foundation
@@ -104,8 +104,10 @@ public struct Plane: Equatable   {
     ///   - flat:  Mirroring plane
     ///   - pip:  Point to be flipped
     /// - Returns: New point
+    /// - See: 'testMirrorPoint' under PlaneTests
     public static func mirror(flat: Plane, pip: Point3D) -> Point3D   {
         
+        /// Components of the point's position
         let comps = Plane.resolveRelativeVec(flat: flat, pip: pip)
         
         let jump = comps.perp * -2.0
@@ -114,27 +116,46 @@ public struct Plane: Equatable   {
         return fairest
     }
     
+    /// Mirror a Vector3D
+    /// - Parameters:
+    ///   - flat:  Mirroring plane
+    ///   - arrow:  Vector to be flipped
+    /// - Returns: New Vector3D
+    public static func mirror(flat: Plane, arrow: Vector3D) -> Vector3D   {
+        
+        let proportion = Vector3D.dotProduct(lhs: flat.normal, rhs: arrow)
+        let along = flat.normal * proportion
+        let inPlane = arrow - along
+        
+        let reflect = along * -1.0 + inPlane
+        
+        return reflect
+    }
+    
     
     /// Flip line segment to the opposite side of the plane
     /// - Parameters:
     ///   - flat:  Mirroring plane
     ///   - wire:  LineSeg to be flipped
     /// - Returns: New LineSeg
+    /// - See: 'testMirrorLineSeg' under PlaneTests
     public static func mirror(flat: Plane, wire: LineSeg) -> LineSeg   {
         
         var pip: Point3D = wire.getOneEnd()
+        
+        /// Components of the point's position
         var comps = Plane.resolveRelativeVec(flat: flat, pip: pip)
         
         var jump = comps.perp * -2.0
-        let fairest1 = Point3D.offset(pip: pip, jump: jump)
+        let fairestOne = Point3D.offset(pip: pip, jump: jump)
         
         pip = wire.getOtherEnd()
         comps = Plane.resolveRelativeVec(flat: flat, pip: pip)
         
         jump = comps.perp * -2.0
-        let fairest2 = Point3D.offset(pip: pip, jump: jump)
+        let fairestOther = Point3D.offset(pip: pip, jump: jump)
         
-        let rail = try! LineSeg(end1: fairest1, end2: fairest2)
+        let rail = try! LineSeg(end1: fairestOne, end2: fairestOther)
         
         return rail
     }
@@ -363,8 +384,8 @@ public struct Plane: Equatable   {
 }
 
 
-/// Check for them being identical
-/// - SeeAlso:  isParallel and isCoincident
+/// Check for them being identical. Overloading of the global function.
+/// - SeeAlso:  Plane.isParallel and Plane.isCoincident
 /// - See: 'testEquals' under PlaneTests
 public func == (lhs: Plane, rhs: Plane) -> Bool   {
     

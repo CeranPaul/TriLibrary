@@ -3,7 +3,7 @@
 //  CurvPack
 //
 //  Created by Paul on 8/24/19.
-//  Copyright © 2020 Ceran Digital Media. All rights reserved.  See LICENSE.md
+//  Copyright © 2021 Ceran Digital Media. All rights reserved.  See LICENSE.md
 //
 
 import Foundation
@@ -171,7 +171,8 @@ public struct Arc: PenCurve, Equatable   {
     ///   - delta: Increase in size
     /// - Throws:
     ///   - CoincidentPointsError for a reduction that would leave nothing but a point.
-    public static func offset(alpha: Arc, delta: Double) throws -> Arc  {
+    /// - See: 'testConcentric' under ArcTests
+    public static func concentric(alpha: Arc, delta: Double) throws -> Arc  {
         
         guard delta > -1.0 * alpha.getRadius() else { throw CoincidentPointsError(dupePt: alpha.getCenter())  }
         
@@ -180,7 +181,7 @@ public struct Arc: PenCurve, Equatable   {
          
         let startOffset = Point3D.offset(pip: alpha.getOneEnd(), jump: thataway * delta)
         
-        var freshArc = try! Arc(ctr: alpha.getCenter(), axis: alpha.getAxisDir(), start: startOffset, sweep: alpha.getSweepAngle())
+        let freshArc = try! Arc(ctr: alpha.getCenter(), axis: alpha.getAxisDir(), start: startOffset, sweep: alpha.getSweepAngle())
         
         return freshArc
     }
@@ -226,6 +227,8 @@ public struct Arc: PenCurve, Equatable   {
     }
     
     /// Generate a global point at the given angle
+    /// - Parameters:
+    ///   - theta - desired angle
     /// - Returns: A point in the global CSYS
     public func pointAtAngleGlobal(theta: Double) -> Point3D   {
         
@@ -241,6 +244,8 @@ public struct Arc: PenCurve, Equatable   {
     
     
     /// Generate a point at the given angle
+    /// - Parameters:
+    ///   - theta - desired angle
     /// - Returns: A point in the local CSYS
     public func pointAtAngle(theta: Double) -> Point3D   {
         
@@ -273,6 +278,7 @@ public struct Arc: PenCurve, Equatable   {
     
     
     /// Figure the arc length
+    /// - See: 'testGetLength' under ArcTests
     public func getLength() -> Double   {
         
         let includedAngle = abs(getSweepAngle())
@@ -384,6 +390,9 @@ public struct Arc: PenCurve, Equatable   {
     }
     
     /// Untested version
+    /// - Parameters:
+    ///   - xirtam: Martix to rotate, translate, and scale.
+    /// - Returns: New Arc
     public func transform(xirtam: Transform) throws -> PenCurve {
         
         let freshCtr = self.center.transform(xirtam: xirtam)
@@ -400,6 +409,7 @@ public struct Arc: PenCurve, Equatable   {
     
         
     /// Same start and end, but different direction. Used to align members of a Loop
+    /// - See: 'testReverse' under ArcTests
     public mutating func reverse() -> Void  {
         
         let oldFinish = self.getOtherEnd()
@@ -407,9 +417,25 @@ public struct Arc: PenCurve, Equatable   {
         
         self.startPt = oldFinish
         self.sweepAngle = freshSweep
+        
+        let baseline = Vector3D.built(from: self.center, towards: self.startPt, unit: true)
+        
+        /// Coordinate system
+        let csys = try! CoordinateSystem(origin: self.center, refDirection: baseline, normal: self.axis)
+        
+        self.toGlobal = try! Transform.genToGlobal(csys: csys)
+        
+        self.fromGlobal = Transform.genFromGlobal(csys: csys)
     }
     
-    /// Should return 0, 1, or 2 points
+    
+    /// Find if the two curves cross.
+    /// - Parameters:
+    ///   - ray: Line to use to check for overlap
+    ///   - accuracy: What is close enough for the result
+    /// - Throws:
+    ///   - NegativeAccuracyError for a goofy input.
+    /// - Returns: 0, 1, or 2 points
     public func intersect(ray: Line, accuracy: Double = Point3D.Epsilon) throws -> [Point3D]   {
         
         guard accuracy > 0.0 else { throw NegativeAccuracyError(acc: accuracy) }

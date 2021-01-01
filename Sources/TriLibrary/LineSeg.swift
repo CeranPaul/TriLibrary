@@ -3,7 +3,7 @@
 //  CurvPack
 //
 //  Created by Paul on 10/28/15.
-//  Copyright © 2020 Ceran Digital Media. All rights reserved.  See LICENSE.md
+//  Copyright © 2021 Ceran Digital Media. All rights reserved.  See LICENSE.md
 //
 
 import Foundation
@@ -122,7 +122,6 @@ public struct LineSeg: PenCurve, Equatable {
     /// Find the point along this line segment specified by the parameter 't'
     /// Checks that  0 < t < 1
     /// - Throws:
-    ///     - CoincidentPointsError
     ///     - ParameterRangeError if the input is lame
     /// - See: 'testPointAt' under LineSegTests
     public func pointAt(t: Double) throws -> Point3D  {
@@ -173,7 +172,8 @@ public struct LineSeg: PenCurve, Equatable {
         return (false, nil)
     }
     
-    /// Plot the line segment.  This will be called by the UIView 'drawRect' function
+    /// Plot the line segment.  This will be called by the UIView 'drawRect' function.
+    /// Part of PenCurve protocol.
     /// - Parameters:
     ///   - context: In-use graphics framework
     ///   - tform:  Model-to-display transform
@@ -228,28 +228,36 @@ public struct LineSeg: PenCurve, Equatable {
     // TODO: Write tests for the above inside LineSegTests
     
     
-    /// Calculate length
-    /// - Returns: Distance
+    /// Calculate length.
+    /// Part of PenCurve protocol.
+    /// - Returns: Distance between the endpoints
     /// - See: 'testLength' under LineSegTests
     public func getLength() -> Double   {
         return Point3D.dist(pt1: self.endAlpha, pt2: self.endOmega)
     }
     
     
-    /// Create a unit vector showing direction
-    /// - Returns: Unit vector to indicate direction
+    /// Create a unit vector showing direction.
+    /// - Returns: Unit vector
     public func getDirection() -> Vector3D   {
         
         return Vector3D.built(from: self.endAlpha, towards: self.endOmega, unit: true)
     }
     
     
-    /// Return the tangent vector, which won't depend on the input parameter
-    /// Some notations show "t" as the parameter, instead of "u"
+    /// Return the tangent vector, which won't depend on the input parameter.
+    /// Part of PenCurve protocol.
+    /// Some notations show "u" as the parameter, instead of "t"
+    /// - Parameters:
+    ///   - t:  Parameter value
+    /// - Throws:
+    ///     - ParameterRangeError if the input is lame
     /// - Returns:
     ///   - tan:  Non-normalized vector
     /// - See: 'testTangent' under LineSegTests
-    public func tangentAt(t: Double) -> Vector3D   {
+    public func tangentAt(t: Double) throws -> Vector3D   {
+        
+        guard self.trimParameters.contains(t) else { throw ParameterRangeError(parA: t) }
         
         let along = Vector3D.built(from: self.endAlpha, towards: self.endOmega)
         return along
@@ -278,7 +286,8 @@ public struct LineSeg: PenCurve, Equatable {
     }
     
     
-    /// Find possible intersection points with a line
+    /// Find possible intersection points with a line.
+    /// Part of PenCurve protocol.
     /// - Parameters:
     ///   - ray:  The Line to be used for intersecting
     ///   - accuracy:  How close is close enough?
@@ -331,11 +340,15 @@ public struct LineSeg: PenCurve, Equatable {
     }
     
     
-    /// See if another segment crosses this one
-    /// Used for seeing if a screen gesture cuts across the current seg
+    /// See if another segment crosses this one.
+    /// Used for seeing if a screen gesture cuts across the current seg.
+    /// - Parameters:
+    ///   - chop:  LineSeg of interest
+    /// - Returns: Simple flag
     /// - See: 'testIsCrossing' under LineSegTests
     public func isCrossing(chop: LineSeg) -> Bool   {
         
+        /// Vector components of each endpoint
         let compsA = self.resolveRelativeVec(speck: chop.endAlpha)
         let compsB = self.resolveRelativeVec(speck: chop.endOmega)
         
@@ -353,10 +366,11 @@ public struct LineSeg: PenCurve, Equatable {
     }
     
     
-    /// Generate array points suitable for drawing
+    /// Generate array points suitable for drawing.
+    /// Part of PenCurve protocol.
     /// - Parameter allowableCrown: Acceptable deviation from the curve
     /// - Throws: NegativeAccuracyError out of habit.
-    /// - Returns: Array of Point3D
+    /// - Returns: Array of two Point3D's
     public func approximate(allowableCrown: Double) throws -> [Point3D]   {
         
         guard allowableCrown > 0.0 else { throw NegativeAccuracyError(acc: allowableCrown) }

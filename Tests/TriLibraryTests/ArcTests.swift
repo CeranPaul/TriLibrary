@@ -3,7 +3,7 @@
 //  SketchCurves
 //
 //  Created by Paul on 11/12/15.
-//  Copyright © 2020 Ceran Digital Media. All rights reserved.  See LICENSE.md
+//  Copyright © 2021 Ceran Digital Media. All rights reserved.  See LICENSE.md
 //
 
 import XCTest
@@ -498,7 +498,7 @@ class ArcTests: XCTestCase {
 //    }
     
     
-    func testOffset()   {
+    func testConcentric()   {
         
         let ctr = Point3D(x: 1.0, y: 1.0, z: 2.0)
         let start = Point3D(x: 1.5, y: 1.0, z: 2.0)
@@ -506,18 +506,57 @@ class ArcTests: XCTestCase {
         
         let cup = try! Arc(ctr: ctr, axis: zee, start: start, sweep: Double.pi / 2.0)
         
-        let jug = try! Arc.offset(alpha: cup, delta: 0.3)
+        let jug = try! Arc.concentric(alpha: cup, delta: 0.3)
         
         XCTAssertEqual(jug.getRadius(), 0.80, accuracy: 0.00001)
         
-        let straw = try! Arc.offset(alpha: cup, delta: -0.3)
+        let straw = try! Arc.concentric(alpha: cup, delta: -0.3)
         
         XCTAssertEqual(straw.getRadius(), 0.20, accuracy: 0.00001)
         
-        XCTAssertThrowsError( try Arc.offset(alpha: cup, delta: -0.6) )
+        XCTAssertThrowsError( try Arc.concentric(alpha: cup, delta: -0.6) )
         
-        XCTAssertThrowsError( try Arc.offset(alpha: cup, delta: -0.5) )
+        XCTAssertThrowsError( try Arc.concentric(alpha: cup, delta: -0.5) )
         
+    }
+    
+    func testGetLength()   {
+        
+        let ctr = Point3D(x: 1.0, y: 1.0, z: 2.0)
+        let start = Point3D(x: 1.5, y: 1.0, z: 2.0)
+        let zee = Vector3D(i: 0.0, j: 0.0, k: 1.0)
+        
+        let cup = try! Arc(ctr: ctr, axis: zee, start: start, sweep: Double.pi / 2.0)
+        
+        let target = Double.pi / 2.0 * 0.5
+        XCTAssertEqual(cup.getLength(), target, accuracy: 0.00001)
+    }
+    
+    func testReverse()   {
+        
+        let ctr = Point3D(x: 1.0, y: 1.0, z: 2.0)
+        let start = Point3D(x: 1.5, y: 1.0, z: 2.0)
+        let zee = Vector3D(i: 0.0, j: 0.0, k: 1.0)
+        
+        var cup = try! Arc(ctr: ctr, axis: zee, start: start, sweep: Double.pi / 2.0)
+        
+        let lengthA = cup.getLength()
+        
+        let alphaA = cup.getOneEnd()
+        let omegaA = cup.getOtherEnd()
+        
+        cup.reverse()
+        
+        let lengthB = cup.getLength()
+        
+        XCTAssertEqual(lengthA, lengthB, accuracy: 0.00001)
+        
+        let alphaB = cup.getOneEnd()
+        let omegaB = cup.getOtherEnd()
+        
+        XCTAssert(alphaB == omegaA)
+        
+        XCTAssert(omegaB == alphaA)
     }
     
     

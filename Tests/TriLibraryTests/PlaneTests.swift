@@ -1,9 +1,9 @@
 //
 //  PlaneTests.swift
-//  SketchCurves
+//  CurvPack
 //
 //  Created by Paul on 12/10/15.
-//  Copyright © 2018 Ceran Digital Media. All rights reserved.  See LICENSE.md
+//  Copyright © 2021 Ceran Digital Media. All rights reserved.  See LICENSE.md
 //
 
 import XCTest
@@ -342,6 +342,46 @@ class PlaneTests: XCTestCase {
         flat = try! Plane(spot: pOrig, arrow: pNorm)
         
         XCTAssert(Plane.isCoincident(lhs: flat, rhs: playingField))
+        
+    }
+    
+    
+    func testMirrorPoint()   {
+        
+        let nexus = Point3D(x: 2.0, y: 3.0, z: 4.0)
+        let horn = Vector3D(i: 1.0, j: 0.0, k: 0.0)
+        
+        let onTheWall = try! Plane(spot: nexus, arrow: horn)
+        
+        let moot = Point3D(x: 3.0, y: 3.0, z: 4.0)
+        let flipped = Plane.mirror(flat: onTheWall, pip: moot)
+        
+        let target = Point3D(x: 1.0, y: 3.0, z: 4.0)
+
+        
+        XCTAssert(flipped == target)
+        
+    }
+    
+    
+    func testMirrorLineSeg()   {
+        
+        let nexus = Point3D(x: 2.0, y: 3.0, z: 4.0)
+        let horn = Vector3D(i: 0.0, j: -1.0, k: 0.0)
+        
+        let onTheWall = try! Plane(spot: nexus, arrow: horn)
+        
+        let mootOne = Point3D(x: 1.0, y: 3.0, z: 4.0)
+        let mootOther = Point3D(x: 3.0, y: 3.0, z: 4.0)
+        
+        let moot = try! LineSeg(end1: mootOne, end2: mootOther)
+        
+        let flippedOne = Plane.mirror(flat: onTheWall, pip: mootOne)
+        let flippedOther = Plane.mirror(flat: onTheWall, pip: mootOther)
+        
+        let flipped = try! LineSeg(end1: flippedOne, end2: flippedOther)
+        
+        XCTAssert(moot.getLength() == flipped.getLength())
         
     }
     
