@@ -11,7 +11,7 @@ import XCTest
 
 class OrthoVolTests: XCTestCase {
 
-    func testInit() {    // Needs to have checks added for reversed inputs
+    func testInit() {
         
         let corner1 = Point3D(x: -2.0, y: -2.0, z: -2.0)
         let corner2 = Point3D(x: 3.0, y: 4.0, z: 5.0)
@@ -54,6 +54,56 @@ class OrthoVolTests: XCTestCase {
             print("Some other logic screw-up while testing a box")
         }
     }
+    
+    func testDepth() {
+        
+        let corner1 = Point3D(x: -2.0, y: -2.0, z: -2.0)
+        let corner2 = Point3D(x: 3.0, y: 4.0, z: 5.0)
+        
+        do   {
+            
+            let shoe = try OrthoVol(corner1: corner1, corner2: corner2)
+                        
+            XCTAssertEqual(shoe.getDepth(), 7.0, accuracy: Point3D.Epsilon / 3.0)
+            
+        } catch is CoincidentPointsError  {
+            print("Really?  You screwed up in a unit test?")
+        }  catch  {
+            print("Some other logic screw-up while testing a box")
+        }
+    }
+    
+    func testCloud()   {
+        
+        /// A collection of random points
+        var cloud = [Point3D]()
+        
+        let rangeLower = -5.2
+        let rangeUpper = 10.5
+        
+        let egnar = ClosedRange<Double>(uncheckedBounds: (lower: rangeLower, upper: rangeUpper))
+        
+        for g in 0...99   {
+            
+            let freshX = Double.random(in: egnar)
+            let freshY = Double.random(in: egnar)
+            let freshZ = Double.random(in: egnar)
+            
+            let freshPoint = Point3D(x: freshX, y: freshY, z: freshZ)
+            cloud.append(freshPoint)
+        }
+        
+        let MonteCarlo = OrthoVol(spots: cloud)
+        
+        
+        let ext1 = Point3D(x: rangeLower, y: rangeLower, z: rangeLower)
+        let ext2 = Point3D(x: rangeUpper, y: rangeUpper, z: rangeUpper)
+        let standard = try! OrthoVol(corner1: ext1, corner2: ext2)
+        
+        XCTAssert(OrthoVol.surrounds(big: standard, little: MonteCarlo))
+        
+    }
+    
     
     func testThicken()  {
         

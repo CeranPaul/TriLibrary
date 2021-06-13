@@ -3,7 +3,7 @@
 //  SurfaceCrib
 //
 //  Created by Paul on 8/11/15.
-//  Copyright © 2018 Ceran Digital Media. All rights reserved.  See LICENSE.md
+//  Copyright © 2021 Ceran Digital Media. All rights reserved.  See LICENSE.md
 //
 
 import Foundation
@@ -53,9 +53,11 @@ public struct Point3D: Hashable {
     
     /// Create a new point by offsetting
     /// - Parameters:
-    ///   - jump:  Vector to be used as the offset
+    ///   - pip: Original point
+    ///   - jump: Vector to be used as the offset
+    /// - Returns: New point
+    /// - SeeAlso: transform
     /// - See: 'testOffset' under Point3DTests
-    /// - SeeAlso:  transform
     public static func offset (pip: Point3D, jump: Vector3D) -> Point3D   {
         
         let totalX = pip.x + jump.i
@@ -68,7 +70,8 @@ public struct Point3D: Hashable {
     /// Move, rotate, and/or scale by a matrix
     /// - Parameters:
     ///   - xirtam:  Matrix for the intended transformation
-    /// - SeeAlso:  offset
+    /// - Returns: New point
+    /// - SeeAlso: offset
     public func transform(xirtam: Transform) -> Point3D {
         
         let pip4 = RowMtx4(valOne: self.x, valTwo: self.y, valThree: self.z, valFour: 1.0)
@@ -105,6 +108,7 @@ public struct Point3D: Hashable {
     /// - Parameters:
     ///   - pt1:  One point
     ///   - pt2:  Another point
+    /// - Returns: Distance as a Double
     /// - See: 'testDist' under Point3DTests
     public static func dist(pt1: Point3D, pt2: Point3D) -> Double   {
         
@@ -119,8 +123,9 @@ public struct Point3D: Hashable {
     
     /// Create a point midway between two others
     /// - Parameters:
-    ///   - alpha:  One boundary
-    ///   - beta:  The other boundary
+    ///   - alpha: One boundary
+    ///   - beta: The other boundary
+    /// - Returns: New point
     /// - See: 'testMidway' under Point3DTests
     public static func midway(alpha: Point3D, beta: Point3D) -> Point3D   {
         
@@ -128,6 +133,10 @@ public struct Point3D: Hashable {
     }
     
     /// Determine the angle (in radians) CCW from the positive X axis in the XY plane
+    /// - Parameters:
+    ///   - ctr: Pivot point
+    ///   - beta: Point of interest
+    /// - Returns: Angle in radians
     public static func angleAbout(ctr: Point3D, tniop: Point3D) -> Double  {
         
         let vec1 = Vector3D.built(from: ctr, towards: tniop)    // No need to normalize
@@ -150,6 +159,7 @@ public struct Point3D: Hashable {
     ///   - alpha:  A test point
     ///   - beta:  Another test point
     ///   - gamma:  The final test point
+    /// - Returns: Simple flag
     /// - See: 'testIsThreeUnique' under Point3DTests
     public static func  isThreeUnique(alpha: Point3D, beta: Point3D, gamma: Point3D) -> Bool   {
         
@@ -167,6 +177,7 @@ public struct Point3D: Hashable {
     ///   - alpha:  A test point
     ///   - beta:  Another test point
     ///   - gamma:  The final test point
+    /// - Returns: Simple flag
     /// - See: 'testIsThreeLinear' under Point3DTests
     public static func isThreeLinear(alpha: Point3D, beta: Point3D, gamma: Point3D) -> Bool   {
         

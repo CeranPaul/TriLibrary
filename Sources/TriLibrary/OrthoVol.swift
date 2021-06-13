@@ -76,6 +76,9 @@ public struct OrthoVol   {
     
     /// Build a brick from two points
     /// Will prevent having a zero dimension for any of the three axes  
+    /// - Parameters:
+    ///   - corner1: One extreme
+    ///   - corner2: The other extreme
     /// - Throws: CoincidentPointsError
     public init(corner1: Point3D, corner2: Point3D) throws  {
         
@@ -126,22 +129,51 @@ public struct OrthoVol   {
     }
     
     
+    /// Find the enclosing volume for an Array of points
+    /// - Parameters:
+    ///   - spots: Point cloud
+    init(spots: [Point3D]) {
+        
+        let xValues = spots.map( { $0.x } )
+        let yValues = spots.map( { $0.y } )
+        let zValues = spots.map( { $0.z } )
+        
+        let leastX = xValues.min()!
+        let mostX = xValues.max()!
+        
+        let leastY = yValues.min()!
+        let mostY = yValues.max()!
+        
+        let leastZ = zValues.min()!
+        let mostZ = zValues.max()!
+        
+        rangeX = ClosedRange(uncheckedBounds: (lower: leastX, upper: mostX))
+        rangeY = ClosedRange(uncheckedBounds: (lower: leastY, upper: mostY))
+        rangeZ = ClosedRange(uncheckedBounds: (lower: leastZ, upper: mostZ))
+        
+    }
+    
+
     /// Simple getter for starting corner
+    /// - Returns: New point
     public func  getOrigin() -> Point3D  {
         return Point3D(x: rangeX.lowerBound, y: rangeY.lowerBound, z: rangeZ.lowerBound)
     }
     
     /// Simple getter for the width
+    /// - Returns: Double
     public func  getWidth() -> Double  {
         return rangeX.upperBound - rangeX.lowerBound
     }
     
     /// Simple getter for the height
+    /// - Returns: Double
     public func  getHeight() -> Double  {
         return rangeY.upperBound - rangeY.lowerBound
     }
     
     /// Simple getter for the depth
+    /// - Returns: Double
     public func  getDepth() -> Double  {
         return rangeZ.upperBound - rangeZ.lowerBound
     }
@@ -204,6 +236,7 @@ public struct OrthoVol   {
     /// Should this become a class function since it is creating a new volume?  Or a constructor?
     /// - Parameters:
     ///   - xirtam:  Matrix for the intended transformation
+    /// - Returns: New volume that has been modified
     public func transform(xirtam: Transform) -> OrthoVol {
         
            // Generate the eight points as an array
@@ -257,10 +290,11 @@ public struct OrthoVol   {
 }   // End of definition for struct OrthoVol
 
 
-/// Construct a volume that combines the two input volumes
+/// Overload the '+' operator to construct a volume from two input volumes
 /// - Parameters:
 ///   - lhs: One volume
 ///   - rhs: Another brick
+/// - Returns: Combined volume
 public func + (lhs: OrthoVol, rhs: OrthoVol) -> OrthoVol   {
     
     let leastX = min(lhs.rangeX.lowerBound, rhs.rangeX.lowerBound)
