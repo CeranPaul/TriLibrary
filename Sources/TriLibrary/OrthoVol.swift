@@ -132,7 +132,7 @@ public struct OrthoVol   {
     /// Find the enclosing volume for an Array of points
     /// - Parameters:
     ///   - spots: Point cloud
-    init(spots: [Point3D]) {
+    public init(spots: [Point3D]) {
         
         let xValues = spots.map( { $0.x } )
         let yValues = spots.map( { $0.y } )

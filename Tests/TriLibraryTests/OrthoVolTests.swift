@@ -104,6 +104,28 @@ class OrthoVolTests: XCTestCase {
         
     }
     
+    func testCenter()   {
+        
+        let ext1 = Point3D(x: -4.0, y: -5.0, z: -6.0)
+        let ext2 = Point3D(x: 4.0, y: 5.0, z: 8.0)
+        let standard = try! OrthoVol(corner1: ext1, corner2: ext2)
+        
+        let target = Point3D(x: 0.0, y: 0.0, z: 1.0)
+        
+        let trial = standard.getRotCenter()
+        
+        XCTAssertEqual(target, trial)
+    }
+    
+    func testLongest()   {
+        
+        let ext1 = Point3D(x: -4.0, y: -5.0, z: -6.0)
+        let ext2 = Point3D(x: -1.0, y: -1.0, z: 6.0)
+        let standard = try! OrthoVol(corner1: ext1, corner2: ext2)
+        
+        XCTAssertEqual(standard.getLongest(), 13.0, accuracy: 0.5)
+    }
+    
     
     func testThicken()  {
         
