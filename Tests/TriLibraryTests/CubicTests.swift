@@ -346,8 +346,6 @@ class CubicTests: XCTestCase {
         XCTAssertFalse(sitRep.flag)
         
            // Set up a point known to be on the curve
-        let tunnelEnd = try! rolling.pointAt(t: 0.22)
-        
         let t2 = Point3D(x: -1.2, y: 0.5448, z: 0.8165)
         
         sitRep = try! rolling.isPerchFor(speck: t2)

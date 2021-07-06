@@ -251,7 +251,6 @@ class LineTests: XCTestCase {
         
         XCTAssertFalse(Line.isParallel(straightA: redstone, straightB: titan3))    // Shouldn't show as parallel
         
-
     }
     
     
@@ -277,7 +276,7 @@ class LineTests: XCTestCase {
             XCTAssert(crossroads == target)
             
         }   catch   {
-            print("Did you really throw an error in a test case?  Line Intersect Two A")
+            XCTFail()   // Generated some kind of Error
         }
         
         let roofOrig = Point3D(x: 0.0, y: 0.0, z: 3.85)
@@ -296,12 +295,10 @@ class LineTests: XCTestCase {
             
             let crossroads = try Line.intersectTwo(straightA: flat, straightB: pursuit)
             
-            print(crossroads)
-            
             XCTAssert(crossroads == target2)
             
         }   catch   {
-            print("Did you really throw an error in a test case?  Line Intersect Two B")
+            XCTFail()   // Generated some kind of Error
         }
         
         do   {
@@ -316,21 +313,19 @@ class LineTests: XCTestCase {
         } catch is ParallelLinesError  {
             XCTAssert(true)
         } catch {
-            XCTFail()
+            XCTFail()   // Generated a different kind of Error
         }
 
         do   {
             
             let crossroads = try Line.intersectTwo(straightA: flat, straightB: flat)
-            
-            print(crossroads)
-            
+                        
             XCTAssert(crossroads == target2)
             
         } catch is CoincidentLinesError  {
             XCTAssert(true)
         } catch {
-            XCTFail()
+            XCTFail()   // Generated a different kind of Error
         }
 
         
@@ -341,19 +336,80 @@ class LineTests: XCTestCase {
             
             let crossroads = try Line.intersectTwo(straightA: flat, straightB: merlin)
             
-            print(crossroads)
-            
             XCTAssert(crossroads == target2)
+            
+        } catch is NonCoPlanarLinesError  {
+            XCTAssert(true)
+        } catch {
+            XCTFail()   // Generated a different kind of Error
+        }
+
+
+        do {
+            let anchor = Point3D(x: -1.5, y: -1.5, z: -1.5)
+            var thataway = Vector3D(i: -0.6, j: -0.6, k: -0.6)
+            thataway.normalize()
+            
+            let rocket1 = try! Line(spot: anchor, arrow: thataway)
+            
+            let  anchor2 = Point3D(x: 3.5, y: 3.5, z: 3.5)
+            let rocket2 = try! Line(spot: anchor2, arrow: thataway)
+            
+            let _ = try Line.intersectTwo(straightA: rocket1, straightB: rocket2)
             
         } catch is CoincidentLinesError  {
             XCTAssert(true)
         } catch {
-            XCTFail()
+            XCTFail()   // Generated a different kind of Error
         }
-
 
     }
 
+    func testLineTransform()   {
+        
+        let lineX = try! Line(spot: Point3D(x: 0.5, y: 1.0, z: 2.0), arrow: Vector3D(i: 1.0, j: 0.0, k: 0.0))
+        
+        let lineY = try! Line(spot: Point3D(x: 0.5, y: 1.0, z: 2.0), arrow: Vector3D(i: 0.0, j: 1.0, k: 0.0))
+        
+        let lineZ = try! Line(spot: Point3D(x: 0.5, y: 1.0, z: 2.0), arrow: Vector3D(i: 0.0, j: 0.0, k: 1.0))
+        
+        let testCSYS = try! CoordinateSystem(spot: Point3D(x: 0.5, y: 1.0, z: 2.0), alpha: Vector3D(i: 1.0, j: 0.0, k: 0.0), beta: Vector3D(i: 0.0, j: 1.0, k: 0.0), gamma: Vector3D(i: 0.0, j: 0.0, k: 1.0))
+        
+        
+        let fred = Transform.genFromGlobal(csys: testCSYS)
+        let wilma = try! Transform.genToGlobal(csys: testCSYS)
+        
+        let spinY = Transform(rotationAxis: Axis.y, angleRad: Double.pi / 2.0)
+        
+        var localVersion = lineX.transform(xirtam: fred)
+        var rotatedLocal = localVersion.transform(xirtam: spinY)
+        var globalVersion = rotatedLocal.transform(xirtam: wilma)
+        
+        
+        XCTAssert(Line.isCoincident(straightA: globalVersion, straightB: lineZ))
+
+        
+        let spinX = Transform(rotationAxis: Axis.x, angleRad: Double.pi / 2.0)
+        
+        localVersion = lineZ.transform(xirtam: fred)
+        rotatedLocal = localVersion.transform(xirtam: spinX)
+        globalVersion = rotatedLocal.transform(xirtam: wilma)
+        
+        
+        XCTAssert(Line.isCoincident(straightA: globalVersion, straightB: lineY))
+
+        
+        let spinZ = Transform(rotationAxis: Axis.z, angleRad: Double.pi / 2.0)
+        
+        localVersion = lineY.transform(xirtam: fred)
+        rotatedLocal = localVersion.transform(xirtam: spinZ)
+        globalVersion = rotatedLocal.transform(xirtam: wilma)
+        
+        
+        XCTAssert(Line.isCoincident(straightA: globalVersion, straightB: lineX))
+        
+    }
+    
     func testResolveRelativePoint()   {
         
         let orig = Point3D(x: 2.0, y: 1.5, z: 0.0)

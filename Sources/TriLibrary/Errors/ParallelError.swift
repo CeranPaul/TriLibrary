@@ -8,7 +8,7 @@
 
 import Foundation
 
-class ParallelError: Error {
+public class ParallelError: Error {
     
     var enil: Line
     var enalp: Plane

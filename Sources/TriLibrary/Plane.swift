@@ -64,7 +64,48 @@ public struct Plane: Equatable   {
 
     }
     
-    // TODO: Write a constructor from two lines, and possibly a line and a point.
+    /// Construct a plane from two lines
+    /// - Parameters:
+    ///   - straightA:  First input line
+    ///   - straightB:  Second input line
+    /// - Throws:
+    ///   - CoincidentLinesError for duplicate  inputs
+    ///   - NonCoPlanarLinesError for bad inputs
+    /// - Returns: Fresh plane
+    public init(straightA: Line, straightB: Line) throws   {
+        
+        guard !Line.isCoincident(straightA: straightA, straightB: straightB)  else  { throw CoincidentLinesError(enil: straightA) }
+        
+        guard Line.isCoplanar(straightA: straightA, straightB: straightB)  else  { throw NonCoPlanarLinesError(enilA: straightA, enilB: straightB) }
+        
+        let freshFlat = try! Plane(straightA: straightA, pip: straightB.getOrigin())   // Protected by the guard statements
+        
+        self.location = freshFlat.getLocation()
+        self.normal = freshFlat.getNormal()
+        
+    }
+
+    
+    /// Construct a plane from a line and point
+    /// - Parameters:
+    ///   - straightA:  Input line
+    ///   - pip: Off line location
+    /// - Throws:
+    ///   - CoincidentPointsError for pip being on straightA
+    /// - Returns: Fresh plane
+    public init(straightA: Line, pip: Point3D) throws   {
+        
+        guard !Line.isCoincident(straightA: straightA, pip: pip)  else  { throw CoincidentPointsError(dupePt: pip) }
+        
+        var between = straightA.resolveRelativeVec(yonder: pip).perp
+        between.normalize()
+        
+        var planeNormal = try! Vector3D.crossProduct(lhs: straightA.getDirection(), rhs: between)   // Protected by the guard statement
+        planeNormal.normalize()
+        
+        self.location = pip
+        self.normal = planeNormal
+    }
 
     /// A getter for the point defining the plane
     /// - See: 'testLocationGetter' under PlaneTests
@@ -160,6 +201,7 @@ public struct Plane: Equatable   {
         return rail
     }
     
+    //TODO: Also write a mirror function for Line?
     
     /// Check to see that the line direction is perpendicular to the normal
     /// - Parameters:

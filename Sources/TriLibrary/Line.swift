@@ -252,6 +252,22 @@ public struct Line: Equatable {
         return Point3D.offset(pip: straightB.getOrigin(), jump: alongB);
     }
     
+    /// Move, rotate, and scale.
+    /// - Parameters:
+    ///   - arrow: Source Line
+    ///   - xirtam: Transform to be applied
+    /// - Returns: Fresh line that has been rotated, moved, and scaled
+    public func transform(xirtam: Transform) -> Line   {
+        
+        let freshDir = self.getDirection().transform(xirtam: xirtam)
+        let freshOrigin = self.getOrigin().transform(xirtam: xirtam)
+        
+        let freshLine = try! Line(spot: freshOrigin, arrow: freshDir)   // Should carry over validity
+        
+        return freshLine
+    }
+    
+    
     /// Generate the perpendicular bisector for the LineSeg between two points
     /// - Parameters:
     ///   - ptA:  First point

@@ -549,7 +549,7 @@ class PlaneTests: XCTestCase {
         }   catch is CoincidentLinesError   {
             XCTAssert(true)
         }   catch   {
-            print("Unexpected journey")
+            XCTFail("Coincident Line")
         }
 
         gOrig = Point3D(x: 2.0, y: 3.1, z: 4.7)
@@ -567,4 +567,56 @@ class PlaneTests: XCTestCase {
 
     }
             
+    func testBuildLinePoint()   {
+        
+        let nexus = Point3D(x: 1.0, y: 1.5, z: 0.0)
+        let yonder = Vector3D(i: 0.0, j: 0.0, k: 1.0)
+        
+        let laser = try! Line(spot: nexus, arrow: yonder)
+        
+        let neighbor = Point3D(x: 1.0, y: 3.5, z: 1.0)
+        
+        let sheet = try! Plane(straightA: laser, pip: neighbor)
+        
+        let outX = Vector3D(i: -1.0, j: 0.0, k: 0.0)
+        
+        XCTAssertEqual(sheet.getNormal(), outX)
+
+        
+        let badPip = Point3D(x: 1.0, y: 1.5, z: -2.0)
+        
+        do   {
+
+            _ = try Plane(straightA: laser, pip: badPip)
+
+        }   catch is CoincidentPointsError   {
+            XCTAssert(true)
+        }   catch   {
+            XCTFail("Coincident Point")
+        }
+
+    }
+    
+    func testBuildTwoLines()   {
+        
+        let nexus = Point3D(x: 1.0, y: 1.5, z: 0.0)
+        let yonder = Vector3D(i: 0.0, j: 0.0, k: 1.0)
+        
+        let laser = try! Line(spot: nexus, arrow: yonder)
+        
+        let nexus2 = Point3D(x: 1.0, y: -0.5, z: 0.3)
+        
+        var yonder2 = Vector3D(i: 0.0, j: 0.707, k: 0.707)
+        yonder2.normalize()
+        
+        let laser2 = try! Line(spot: nexus2, arrow: yonder2)
+        
+        let sheet = try! Plane(straightA: laser, straightB: laser2)
+        
+        let outX = Vector3D(i: 1.0, j: 0.0, k: 0.0)
+        
+        XCTAssertEqual(sheet.getNormal(), outX)
+
+    }
+
 }

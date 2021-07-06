@@ -60,6 +60,9 @@ class LineSegTests: XCTestCase {
         
         XCTAssert(ladybug == home)
         
+        XCTAssertThrowsError(try slash.pointAt(t: -0.4))
+        XCTAssertThrowsError(try slash.pointAt(t: 1.7))
+
     }
     
 
@@ -81,6 +84,9 @@ class LineSegTests: XCTestCase {
         
         XCTAssertFalse(trial == normTarget)
         
+        XCTAssertThrowsError(try stroke.tangentAt(t: -0.4))
+        XCTAssertThrowsError(try stroke.tangentAt(t: 1.7))
+
     }
     
     func testLength()   {
@@ -324,6 +330,11 @@ class LineSegTests: XCTestCase {
         sitRep = try! contrail.isPerchFor(speck: t4)
         XCTAssertFalse(sitRep.flag)
         
+        sitRep = try! contrail.isPerchFor(speck: ptA)
+        XCTAssert(sitRep.flag)
+
+        sitRep = try! contrail.isPerchFor(speck: ptB)
+        XCTAssert(sitRep.flag)
 
     }
     
@@ -337,6 +348,24 @@ class LineSegTests: XCTestCase {
         XCTAssert(plateau.findCrown(smallerT: 0.0, largerT: 1.0)  == 0.0)
         
     }
+    
+    func testApproximate()   {
+        
+        let ptA = Point3D(x: 4.0, y: 2.0, z: 5.0)
+        let ptB = Point3D(x: 2.0, y: 4.0, z: 5.0)
+        
+        let dash = try! LineSeg(end1: ptA, end2: ptB)
+        
+        let milestones = try! dash.approximate(allowableCrown: 0.01)
+        
+        XCTAssertEqual(milestones.count, 2)
+        
+        XCTAssertEqual(milestones[0], ptA)
+        XCTAssertEqual(milestones[1], ptB)
+        
+        XCTAssertThrowsError(try dash.approximate(allowableCrown: -0.5))
+    }
+    
     
     func testFindStep()   {
         

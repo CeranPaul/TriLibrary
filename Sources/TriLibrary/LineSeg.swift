@@ -24,6 +24,9 @@ public struct LineSeg: PenCurve, Equatable {
     
     
     /// Build a line segment from two points
+    /// - Parameters:
+    ///   - end1:  One point
+    ///   - end2:  Other point
     /// - Throws: CoincidentPointsError
     /// - See: 'testFidelity' under LineSegTests
     public init(end1: Point3D, end2: Point3D) throws {
@@ -64,6 +67,7 @@ public struct LineSeg: PenCurve, Equatable {
     }
     
     /// Get the box that bounds the curve
+    /// - Returns: Brick aligned to the CSYS
     public func getExtent() -> OrthoVol  {
         
         return try! OrthoVol(corner1: self.endAlpha, corner2: self.endOmega)
@@ -80,7 +84,10 @@ public struct LineSeg: PenCurve, Equatable {
     
     
     /// Move, rotate, and scale by a matrix
+    /// - Parameters:
+    ///   - xirtam:  Transform to be applied
     /// - Throws: CoincidentPointsError if it was scaled to be very small
+    /// - Returns:  Modified LineSeg
     public func transform(xirtam: Transform) throws -> PenCurve {
         
         let tAlpha = endAlpha.transform(xirtam: xirtam)
@@ -123,6 +130,7 @@ public struct LineSeg: PenCurve, Equatable {
     /// Checks that  0 < t < 1
     /// - Throws:
     ///     - ParameterRangeError if the input is lame
+    /// - Returns: New Point3D
     /// - See: 'testPointAt' under LineSegTests
     public func pointAt(t: Double) throws -> Point3D  {
         
@@ -369,7 +377,7 @@ public struct LineSeg: PenCurve, Equatable {
     /// Generate array points suitable for drawing.
     /// Part of PenCurve protocol.
     /// - Parameter allowableCrown: Acceptable deviation from the curve
-    /// - Throws: NegativeAccuracyError out of habit.
+    /// - Throws: NegativeAccuracyError even though allowableCrown is ignored.
     /// - Returns: Array of two Point3D's
     public func approximate(allowableCrown: Double) throws -> [Point3D]   {
         

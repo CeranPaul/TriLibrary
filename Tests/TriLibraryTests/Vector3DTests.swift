@@ -226,7 +226,7 @@ class Vector3DTests: XCTestCase {
         
         let t = Transform(rotationAxis: Axis.z, angleRad: Double.pi / 4.0)
         
-        let swung = Vector3D.transform(thataway: orig, xirtam: t)
+        let swung = orig.transform(xirtam: t)
         
         XCTAssertEqual(swung, target)
     }
@@ -296,6 +296,12 @@ class Vector3DTests: XCTestCase {
         
         XCTAssertEqual(outgoing.k, -1.0, accuracy: 0.0001)
         
+        
+        let empty = Vector3D(i: 0.0, j: 0.0, k: 0.0)
+        XCTAssertThrowsError(try Vector3D.crossProduct(lhs: there, rhs: empty))
+        
+        XCTAssertThrowsError(try Vector3D.crossProduct(lhs: empty, rhs: there))
+
     }
     
     
@@ -309,6 +315,39 @@ class Vector3DTests: XCTestCase {
         XCTAssert(trial == 1.06)
     }
     
+    func testVectorResolve()   {
+        
+        let anchor = Point3D(x: 1.0, y: 2.0, z: 3.0)
+        let dir = Vector3D(i: 1.0, j: 0.0, k: 0.0)
+        
+        /// Target plane
+        let base = try! Plane(spot: anchor, arrow: dir)
+        
+        let trialVec = Vector3D(i: 0.3, j: 0.4, k: 0.5)
+        
+        let pjection = Vector3D.resolve(split: trialVec, ref: base.getNormal())
+        
+        let targetAlong = Vector3D(i: 0.3, j: 0.0, k: 0.0)
+        let targetPerp = Vector3D(i: 0.0, j: 0.4, k: 0.5)
+        
+        XCTAssertEqual(pjection.along, targetAlong)   // Accuracy of Vector3D is implied
+        
+        XCTAssertEqual(pjection.perp, targetPerp)
+        
+        
+        let trialVec2 = Vector3D(i: -0.3, j: -0.4, k: -0.5)
+        
+        let pjection2 = Vector3D.resolve(split: trialVec2, ref: base.getNormal())
+        
+        let targetAlong2 = Vector3D(i: -0.3, j: 0.0, k: 0.0)
+        let targetPerp2 = Vector3D(i: 0.0, j: -0.4, k: -0.5)
+        
+        XCTAssertEqual(pjection2.along, targetAlong2)   // Accuracy of Vector3D is implied
+        
+        XCTAssertEqual(pjection2.perp, targetPerp2)
+        
+    }
+ 
     func testTwistAbout()   {
         
         let thar = Vector3D(i: 1.0, j: 0.0, k: 0.0)

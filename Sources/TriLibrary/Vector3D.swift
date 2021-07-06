@@ -93,9 +93,9 @@ public struct Vector3D: Equatable {
     /// - Returns: A new Vector
     /// - SeeAlso:  twistAbout()
     /// - See: 'testTransform' under Vector3DTests
-    public static func transform(thataway: Vector3D, xirtam: Transform) -> Vector3D {
+    public func transform(xirtam: Transform) -> Vector3D {
         
-        let dir4 = RowMtx4(valOne: thataway.i, valTwo: thataway.j, valThree: thataway.k, valFour: 0.0)
+        let dir4 = RowMtx4(valOne: self.i, valTwo: self.j, valThree: self.k, valFour: 0.0)
         let vec4 = dir4 * xirtam
         
         let transformed = vec4.toVector()
@@ -184,9 +184,10 @@ public struct Vector3D: Equatable {
     /// - Parameters:
     ///   - lhs:  One Vector
     ///   - rhs:  Another Vector
-    /// - Throws: ZeroVectorError if either of the inputs are zero.  Untested!
-    /// - Throws: IdenticalVectorError if the inputs are identical or opposite.
-    /// - Throws: IdenticalVectorError if the inputs are scaled versions of each other.
+    /// - Throws:
+    ///   - ZeroVectorError if either of the inputs are zero.  Untested!
+    ///   - IdenticalVectorError if the inputs are identical or opposite.
+    ///   - IdenticalVectorError if the inputs are scaled versions of each other.
     /// - See: 'testCross' under Vector3DTests
     public static func crossProduct(lhs: Vector3D, rhs: Vector3D) throws -> Vector3D   {
         
@@ -250,6 +251,22 @@ public struct Vector3D: Equatable {
         let flag2 = Vector3D.isOpposite(lhs: leftNormalized, rhs: rightNormalized)
         
         return flag1 || flag2
+    }
+    
+    
+    /// Resolve a vector into components relative to a reference vector
+    /// Should become part of class Vector3D
+    /// - Parameters:
+    ///   - split: Vector to be broken up
+    ///   - ref: Reference vector. It's good if this is a unit vector.
+    /// - Returns: One new vector perpendicular to the reference, one new vector along the reference
+    public static func resolve(split: Vector3D, ref: Vector3D) -> (perp: Vector3D, along: Vector3D)   {
+        
+        let alongProjection = Vector3D.dotProduct(lhs: split, rhs: ref)
+        let alongComponent = ref * alongProjection
+        let perp = split - alongComponent
+        
+        return (perp, alongComponent)
     }
     
     

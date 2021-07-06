@@ -83,7 +83,7 @@ class OrthoVolTests: XCTestCase {
         
         let egnar = ClosedRange<Double>(uncheckedBounds: (lower: rangeLower, upper: rangeUpper))
         
-        for g in 0...99   {
+        for _ in 0...99   {
             
             let freshX = Double.random(in: egnar)
             let freshY = Double.random(in: egnar)

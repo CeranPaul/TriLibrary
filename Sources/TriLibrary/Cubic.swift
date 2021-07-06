@@ -1239,20 +1239,38 @@ public struct Cubic: PenCurve   {
     }
     
     
-    /// Does not work!
+    /// Not tested!
     /// Find the distance along the curve between two parameter values
     /// - Parameters:
     ///   - tSmall: A location on the curve
     ///   - tLarge: Second location on the curve
     /// - Throws:
     ///     - ParameterRangeError if either input parameter is lame
-    public func trueLength(tSmall: Double, tLarge: Double) throws   {
+    public func trueLength(tSmall: Double, tLarge: Double) throws -> Double   {
         
         guard self.trimParameters.contains(tSmall) else { throw ParameterRangeError(parA: tSmall) }
         guard self.trimParameters.contains(tLarge) else { throw ParameterRangeError(parA: tLarge) }
 
         let span = tLarge - tSmall
         
+        let spanStep = span / 20.0
+        
+        var total = 0.0
+        
+        var oldPoint = try! self.pointAt(t: tSmall)   // Protected by the guard statement
+        
+        for g in 1...20   {
+            
+            let param = tSmall + Double(g) * spanStep
+            let freshPoint = try! self.pointAt(t: param)   // Protected by the guard statement
+            
+            let piece = Point3D.dist(pt1: oldPoint, pt2: freshPoint)
+            total += piece
+            
+            oldPoint = freshPoint   // Prepare for next iteration
+        }
+        
+        return total
     }
 
     

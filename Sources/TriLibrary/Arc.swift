@@ -397,7 +397,7 @@ public struct Arc: PenCurve, Equatable   {
         
         let freshCtr = self.center.transform(xirtam: xirtam)
         
-        let freshDir = Vector3D.transform(thataway: self.axis, xirtam: xirtam)
+        let freshDir = self.axis.transform(xirtam: xirtam)
         
         let freshStart = self.startPt.transform(xirtam: xirtam)
         
