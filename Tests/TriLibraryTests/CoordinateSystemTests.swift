@@ -211,6 +211,48 @@ class CoordinateSystemTests: XCTestCase {
         XCTAssert(rotSide4.getAxisX() == targetHoriz)
     }
     
+    func testInitGuard()   {
+        
+        let sqrt22 = sqrt(2.0) / 2.0
+        
+        let axis1 = Vector3D(i: sqrt22, j: sqrt22, k: 0.0)
+        let axis2 = Vector3D(i: -sqrt22, j: sqrt22, k: 0.0)
+        let axis3 = Vector3D(i: 0.0, j: 0.0, k: 1.0)
+        
+        let nexus = Point3D(x: 1.0, y: 2.0, z: 1.5)
+        
+        let axis2B = Vector3D(i: -sqrt22, j: 0.8, k: 0.0)
+        
+        do   {
+            _ = try CoordinateSystem(origin: nexus, refDirection: axis2B, normal: axis3)
+        } catch is NonUnitDirectionError {
+            XCTAssert(true)
+        } catch {
+            XCTFail()
+        }
+        
+        let axis3B = Vector3D(i: 0.0, j: 0.0, k: 1.2)
+        
+        do   {
+            _ = try CoordinateSystem(origin: nexus, refDirection: axis2, normal: axis3B)
+        } catch is NonUnitDirectionError {
+            XCTAssert(true)
+        } catch {
+            XCTFail()
+        }
+        
+        let axis3C = Vector3D(i: sqrt(3.0)/2.0, j: 0.5, k: 0.0)
+        
+        do   {
+            _ = try CoordinateSystem(origin: nexus, refDirection: axis2, normal: axis3C)
+        } catch is NonOrthogonalCSYSError {
+            XCTAssert(true)
+        } catch {
+            XCTFail()
+        }
+        
+    }
+    
     func testRelocate()   {
         
         let home = Point3D(x: 5.0, y: 2.0, z: 1.0)

@@ -201,7 +201,7 @@ public struct Plane: Equatable   {
         return rail
     }
     
-    //TODO: Also write a mirror function for Line?
+    //TODO: Also write a mirror function for Line, Arc, and other curves?
     
     /// Check to see that the line direction is perpendicular to the normal
     /// - Parameters:
@@ -223,11 +223,10 @@ public struct Plane: Equatable   {
     ///   - enil:  Line for testing
     /// - Returns: Simple flag
     /// - See: 'testIsCoincidentLine' under PlaneTests
-    public static func isCoincident(enalp: Plane, enil: Line) -> Bool  {
+    public static func isCoincident(flat: Plane, enil: Line) -> Bool  {
         
-        return self.isParallel(flat: enalp, enil: enil) && Plane.isCoincident(flat: enalp, pip: enil.getOrigin())
+        return self.isParallel(flat: flat, enil: enil) && Plane.isCoincident(flat: flat, pip: enil.getOrigin())
     }
-    
     
     /// Does the argument point lie on the plane?
     /// - Parameters:
@@ -247,6 +246,7 @@ public struct Plane: Equatable   {
         return  abs(distanceOffPlane) < Point3D.Epsilon
     }
     
+    
     /// Planes are parallel, and rhs location lies on lhs.
     /// Normals may be opposite, and will still return true.
     /// - Parameters:
@@ -255,9 +255,9 @@ public struct Plane: Equatable   {
     /// - Returns: Simple flag
     /// - SeeAlso:  isParallel and ==
     /// - See: 'testIsCoincidentPlane' under PlaneTests
-    public static func isCoincident(lhs: Plane, rhs: Plane) -> Bool  {
+    public static func isCoincident(flatLeft: Plane, flatRight: Plane) -> Bool  {
         
-        return Plane.isCoincident(flat: lhs, pip: rhs.location) && Plane.isParallel(lhs: lhs, rhs: rhs)
+        return Plane.isCoincident(flat: flatLeft, pip: flatRight.location) && Plane.isParallel(lhs: flatLeft, rhs: flatRight)
     }
     
     
@@ -314,7 +314,7 @@ public struct Plane: Equatable   {
     public static func buildPerpThruLine(enil: Line, enalp: Plane) throws -> Plane   {
         
         // TODO:  Better error type
-        guard Plane.isCoincident(enalp: enalp, enil: enil)  else  { throw CoincidentLinesError(enil: enil) }
+        guard Plane.isCoincident(flat: enalp, enil: enil)  else  { throw CoincidentLinesError(enil: enil) }
         
         let newDir = try! Vector3D.crossProduct(lhs: enil.getDirection(), rhs: enalp.normal)
         
@@ -374,7 +374,7 @@ public struct Plane: Equatable   {
     public static func intersectPlanes(flatA: Plane, flatB: Plane) throws -> Line   {
         
            // This goes first to provide a better error message.
-        guard !Plane.isCoincident(lhs: flatA, rhs: flatB)  else  { throw CoincidentPlanesError(enalpA: flatA) }
+        guard !Plane.isCoincident(flatLeft: flatA, flatRight: flatB)  else  { throw CoincidentPlanesError(enalpA: flatA) }
         
         guard !Plane.isParallel(lhs: flatA, rhs: flatB)  else  { throw ParallelPlanesError(enalpA: flatA) }
         

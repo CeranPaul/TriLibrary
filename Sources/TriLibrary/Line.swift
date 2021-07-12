@@ -3,7 +3,7 @@
 //  SketchCurves
 //
 //  Created by Paul on 8/12/15.
-//  Copyright © 2018 Ceran Digital Media.  See LICENSE.md
+//  Copyright © 2021 Ceran Digital Media.  See LICENSE.md
 //
 
 import Foundation
@@ -127,6 +127,7 @@ public struct Line: Equatable {
     ///   - straightA:  Reference line
     ///   - pip:  Point to test
     /// - SeeAlso:  Overloaded ==
+    /// - Returns: Simple flag
     /// - See: 'testIsCoincident' under LineTests
     public static func isCoincident(straightA: Line, pip: Point3D) -> Bool   {
         
@@ -162,6 +163,7 @@ public struct Line: Equatable {
     /// Check two lines  See that the either origin lies on the other line, and
     /// that they have the same direction, even with the opposite sense
     /// - SeeAlso:  Overloaded ==
+    /// - Returns: Simple flag
     /// - See: 'testIsCoincidentLine' under LineTests
     public static func isCoincident(straightA: Line, straightB: Line) -> Bool   {
         
@@ -174,6 +176,7 @@ public struct Line: Equatable {
     
     
     /// Verify that two lines could form a plane.
+    /// Will fail if lines are really, really close together.
     /// - Parameters:
     ///   - straightA:  First test line
     ///   - straightB:  Second test line
@@ -218,6 +221,7 @@ public struct Line: Equatable {
     ///     - CoincidentLinesError if the inputs are the same
     ///     - ParallelLinesError if the inputs are parallel
     ///     - NonCoPlanarLinesError if the inputs don't lie in the same plane
+    /// - Returns: Common point
     /// - See: 'testIntersectTwo' under LineTests
     public static func intersectTwo (straightA: Line, straightB: Line) throws -> Point3D  {
         
@@ -251,6 +255,7 @@ public struct Line: Equatable {
         
         return Point3D.offset(pip: straightB.getOrigin(), jump: alongB);
     }
+    
     
     /// Move, rotate, and scale.
     /// - Parameters:

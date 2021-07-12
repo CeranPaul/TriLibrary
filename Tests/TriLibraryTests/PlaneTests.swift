@@ -285,13 +285,13 @@ class PlaneTests: XCTestCase {
         
         var heli = try! Line(spot: gOrig, arrow: gNorm)
         
-        XCTAssertFalse(Plane.isCoincident(enalp: playingField, enil: heli))
+        XCTAssertFalse(Plane.isCoincident(flat: playingField, enil: heli))
         
         let gOrig2 = Point3D(x: 2.0, y: 3.5, z: 6.0)
         gNorm = Vector3D(i: 0.0, j: 0.0, k: 1.0)
         heli = try! Line(spot: gOrig2, arrow: gNorm)
 
-        XCTAssert(Plane.isCoincident(enalp: playingField, enil: heli))
+        XCTAssert(Plane.isCoincident(flat: playingField, enil: heli))
         
     }
     
@@ -327,7 +327,7 @@ class PlaneTests: XCTestCase {
         var pNorm = Vector3D(i: 0.0, j: 0.0, k: 1.0)
         var flat = try! Plane(spot: pOrig, arrow: pNorm)
         
-        XCTAssertFalse(Plane.isCoincident(lhs: flat, rhs: playingField))
+        XCTAssertFalse(Plane.isCoincident(flatLeft: flat, flatRight: playingField))
         
         
         // Parallel, but not coincident
@@ -335,13 +335,13 @@ class PlaneTests: XCTestCase {
         
         flat = try! Plane(spot: pOrig, arrow: pNorm)
         
-        XCTAssertFalse(Plane.isCoincident(lhs: flat, rhs: playingField))
+        XCTAssertFalse(Plane.isCoincident(flatLeft: flat, flatRight: playingField))
         
         
         pOrig = Point3D(x: 2.0, y: 3.1, z: 5.0)
         flat = try! Plane(spot: pOrig, arrow: pNorm)
         
-        XCTAssert(Plane.isCoincident(lhs: flat, rhs: playingField))
+        XCTAssert(Plane.isCoincident(flatLeft: flat, flatRight: playingField))
         
     }
     
@@ -363,6 +363,37 @@ class PlaneTests: XCTestCase {
         
     }
     
+    func testMirrorVector()   {
+        
+        let nexus = Point3D(x: 2.0, y: 3.0, z: 4.0)
+        let horn = Vector3D(i: 0.0, j: -1.0, k: 0.0)
+        
+        let XZplane = try! Plane(spot: nexus, arrow: horn)
+        
+        let arrow1 = Vector3D(i: 0.5, j: 0.7, k: 0.5)
+        let mirror1 = Vector3D(i: 0.5, j: -0.7, k: 0.5)
+        
+        let flipped1 = Plane.mirror(flat: XZplane, arrow: arrow1)
+        XCTAssertEqual(flipped1, mirror1)
+    
+        let horn2 = Vector3D(i: 1.0, j: 0.0, k: 0.0)
+        let YZplane = try! Plane(spot: nexus, arrow: horn2)
+        
+        let mirror2 = Vector3D(i: -0.5, j: 0.7, k: 0.5)
+        
+        let flipped2 = Plane.mirror(flat: YZplane, arrow: arrow1)
+        XCTAssertEqual(flipped2, mirror2)
+        
+        let horn3 = Vector3D(i: 0.0, j: 0.0, k: 1.0)
+        let XYplane = try! Plane(spot: nexus, arrow: horn3)
+        
+        let mirror3 = Vector3D(i: 0.5, j: 0.7, k: -0.5)
+        
+        let flipped3 = Plane.mirror(flat: XYplane, arrow: arrow1)
+        XCTAssertEqual(flipped3, mirror3)
+        
+    }
+    
     
     func testMirrorLineSeg()   {
         
@@ -376,13 +407,38 @@ class PlaneTests: XCTestCase {
         
         let moot = try! LineSeg(end1: mootOne, end2: mootOther)
         
-        let flippedOne = Plane.mirror(flat: onTheWall, pip: mootOne)
-        let flippedOther = Plane.mirror(flat: onTheWall, pip: mootOther)
-        
-        let flipped = try! LineSeg(end1: flippedOne, end2: flippedOther)
+        let flipped = Plane.mirror(flat: onTheWall, wire: moot)
         
         XCTAssert(moot.getLength() == flipped.getLength())
         
+        let flippedOne = Plane.mirror(flat: onTheWall, pip: mootOne)
+        let flippedOther = Plane.mirror(flat: onTheWall, pip: mootOther)
+        
+        XCTAssert(flipped.getOneEnd() == flippedOne)
+        XCTAssert(flipped.getOtherEnd() == flippedOther)
+
+    }
+    
+    func testISParallel()   {
+        
+        let nexus = Point3D(x: 2.0, y: 3.0, z: 4.0)
+        let horn = Vector3D(i: 1.0, j: 0.0, k: 0.0)
+        
+        let groundFloor = try! Plane(spot: nexus, arrow: horn)
+        
+        let launcher = Point3D(x: 4.0, y: 3.0, z: 4.0)
+        var thataway = Vector3D(i: 0.0, j: 0.7, k: 0.7)
+        thataway.normalize()
+        
+        let contrail = try! Line(spot: launcher, arrow: thataway)
+        
+        XCTAssert(Plane.isParallel(flat: groundFloor, enil: contrail))
+        
+        var thataway2 = Vector3D(i: 0.1, j: 0.7, k: 0.7)
+        thataway2.normalize()
+        
+        let contrail2 = try! Line(spot: launcher, arrow: thataway2)
+        XCTAssertFalse(Plane.isParallel(flat: groundFloor, enil: contrail2))
     }
     
     
@@ -540,7 +596,7 @@ class PlaneTests: XCTestCase {
 
         var heli = try! Line(spot: gOrig, arrow: gNorm)
 
-        XCTAssertFalse(Plane.isCoincident(enalp: groundFloor, enil: heli))
+        XCTAssertFalse(Plane.isCoincident(flat: groundFloor, enil: heli))
 
         do   {
 
@@ -555,7 +611,7 @@ class PlaneTests: XCTestCase {
         gOrig = Point3D(x: 2.0, y: 3.1, z: 4.7)
         heli = try! Line(spot: gOrig, arrow: gNorm)
 
-        XCTAssert(Plane.isCoincident(enalp: groundFloor, enil: heli))
+        XCTAssert(Plane.isCoincident(flat: groundFloor, enil: heli))
 
         let standup = try! Plane.buildPerpThruLine(enil: heli, enalp: groundFloor)
 

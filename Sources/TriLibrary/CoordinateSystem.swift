@@ -118,13 +118,21 @@ public struct CoordinateSystem: Equatable   {
     }
     
     /// A construction method useful for Arcs
+    /// - Parameters:
+    ///   - origin: Point to serve as the origin
+    ///   - refDirection: A unit Vector3D that will become the X axis.
+    ///   - normal: A unit Vector3D that will become the Z axis.
     /// - Throws:
     ///   - NonUnitDirectionError for any bad input vector
+    ///   - NonOrthogonalCSYSError if refDirection and normal are not perpendicular
     ///   - IdenticalVectorError for non-unique inputs
     public init(origin: Point3D, refDirection: Vector3D, normal: Vector3D) throws   {
         
-        guard (refDirection.isUnit()) else {  throw NonUnitDirectionError(dir: refDirection) }
-        guard (normal.isUnit()) else {  throw NonUnitDirectionError(dir: normal) }
+        guard (refDirection.isUnit()) else { throw NonUnitDirectionError(dir: refDirection) }
+        guard (normal.isUnit()) else { throw NonUnitDirectionError(dir: normal) }
+        
+        let projection = Vector3D.dotProduct(lhs: refDirection, rhs: normal)
+        guard abs(projection) < Vector3D.EpsilonV else { throw NonOrthogonalCSYSError() }
         
         var vert = try Vector3D.crossProduct(lhs: normal, rhs: refDirection)
         vert.normalize()

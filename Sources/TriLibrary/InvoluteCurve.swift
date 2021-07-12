@@ -1,9 +1,9 @@
 //
 //  InvoluteCurve.swift
-//  SurfTooth
+//  TriLibrary
 //
 //  Created by Paul on 9/10/16.
-//  Copyright © 2018 Ceran Digital Media. All rights reserved.
+//  Copyright © 2021 Ceran Digital Media. See License.md.
 //
 
 import Foundation
@@ -16,7 +16,7 @@ public struct Involute   {
     var baseRadius: Double   // Figure 11-10 in Shigley is helpful
 
     
-    /// See a different class for generating the entire tooth.
+    /// See a different class for generating an entire gear tooth.
     init(baseRadius: Double)   {
         
         self.baseRadius = baseRadius
@@ -58,8 +58,7 @@ public struct Involute   {
         return toothPoint
     }
    
-    
-    
+        
     /// Determine the location of a point for an input radius.
     /// Brute force convergence.
     /// - Parameters:
@@ -68,6 +67,8 @@ public struct Involute   {
     /// - Returns: Angle (radians) that generated the point
     /// - SeeAlso: 'pointAtAngle()'
     public func angleForRadius(targetR: Double, epsilon: Double) -> Double   {
+        
+        //TODO: Add guard statement to protect against a radius that is too small.
         
         /// Circle center
         let center = Point3D(x: 0.0, y: 0.0, z: 0.0)
@@ -86,6 +87,7 @@ public struct Involute   {
         /// Condition of previous error
         var lastDeltaPositive = false
         
+        //TODO: Add a backstop mechanism to avoid an infiite loop.
         
            // Assumes that the starting point is less than the desired value
         
