@@ -221,21 +221,32 @@ public struct Plane: Equatable   {
     /// - Parameters:
     ///   - enalp:  Reference plane
     ///   - enil:  Line for testing
+    ///   - accuracy: Distance under which the Line will considered to be coincident
     /// - Returns: Simple flag
     /// - See: 'testIsCoincidentLine' under PlaneTests
-    public static func isCoincident(flat: Plane, enil: Line) -> Bool  {
+    public static func isCoincident(flat: Plane, enil: Line, accuracy: Double = Point3D.Epsilon) throws -> Bool  {
         
-        return self.isParallel(flat: flat, enil: enil) && Plane.isCoincident(flat: flat, pip: enil.getOrigin())
+        guard accuracy > 0.0 else { throw NegativeAccuracyError(acc: accuracy) }
+            
+        let flag1 = self.isParallel(flat: flat, enil: enil)
+        let flag2 = try! Plane.isCoincident(flat: flat, pip: enil.getOrigin(), accuracy: accuracy)
+        
+        return flag1 && flag2
     }
     
     /// Does the argument point lie on the plane?
     /// - Parameters:
     ///   - flat:  Plane for testing
     ///   - pip:  Point for testing
+    ///   - accuracy: Distance under which a point will considered to be coincident
+    /// - Throws:
+    ///   - NegativeAccuracyError for bad 'accuracy' parameter
     /// - Returns: Simple flag
     /// - See: 'testIsCoincident' under PlaneTests
-    public static func isCoincident(flat: Plane, pip:  Point3D) -> Bool  {
+    public static func isCoincident(flat: Plane, pip:  Point3D, accuracy: Double = Point3D.Epsilon) throws -> Bool  {
         
+        guard accuracy > 0.0 else { throw NegativeAccuracyError(acc: accuracy) }
+            
         if pip == flat.getLocation()   {  return true  }   // Shortcut!
         
         let bridge = Vector3D.built(from: flat.location, towards: pip)
@@ -243,7 +254,7 @@ public struct Plane: Equatable   {
         // This can be positive, negative, or zero
         let distanceOffPlane = Vector3D.dotProduct(lhs: bridge, rhs: flat.normal)
         
-        return  abs(distanceOffPlane) < Point3D.Epsilon
+        return  abs(distanceOffPlane) < accuracy
     }
     
     
@@ -252,12 +263,17 @@ public struct Plane: Equatable   {
     /// - Parameters:
     ///   - lhs:  One plane for testing
     ///   - rhs:  Another plane for testing
+    ///   - accuracy: Distance under which planes will considered to be coincident
+    /// - Throws:
+    ///   - NegativeAccuracyError for bad 'accuracy' parameter
     /// - Returns: Simple flag
     /// - SeeAlso:  isParallel and ==
     /// - See: 'testIsCoincidentPlane' under PlaneTests
-    public static func isCoincident(flatLeft: Plane, flatRight: Plane) -> Bool  {
+    public static func isCoincident(flatLeft: Plane, flatRight: Plane, accuracy: Double = Point3D.Epsilon) throws -> Bool  {
         
-        return Plane.isCoincident(flat: flatLeft, pip: flatRight.location) && Plane.isParallel(lhs: flatLeft, rhs: flatRight)
+        guard accuracy > 0.0 else { throw NegativeAccuracyError(acc: accuracy) }
+            
+        return try Plane.isCoincident(flat: flatLeft, pip: flatRight.location, accuracy: accuracy) && Plane.isParallel(lhs: flatLeft, rhs: flatRight)
     }
     
     
@@ -268,7 +284,7 @@ public struct Plane: Equatable   {
     /// - Returns: Simple flag
     /// - SeeAlso:  isCoincident and ==
     /// - See: 'testIsParallelPlane' under PlaneTests
-    public static func isParallel(lhs: Plane, rhs: Plane) -> Bool{
+    public static func isParallel(lhs: Plane, rhs: Plane) -> Bool   {
         
         return lhs.normal == rhs.normal || Vector3D.isOpposite(lhs: lhs.normal, rhs: rhs.normal)
     }
@@ -310,11 +326,12 @@ public struct Plane: Equatable   {
     /// - Returns: Fresh plane
     /// - Throws:
     ///   - CoincidentLinesError if line doesn't lie on the plane
+    ///   - NegativeAccuracyError for bad 'accuracy' parameter
     /// - See: 'testBuildPerpThruLine' under PlaneTests
-    public static func buildPerpThruLine(enil: Line, enalp: Plane) throws -> Plane   {
+    public static func buildPerpThruLine(enil: Line, enalp: Plane, accuracy: Double = Point3D.Epsilon) throws -> Plane   {
         
         // TODO:  Better error type
-        guard Plane.isCoincident(flat: enalp, enil: enil)  else  { throw CoincidentLinesError(enil: enil) }
+        guard try Plane.isCoincident(flat: enalp, enil: enil)  else  { throw CoincidentLinesError(enil: enil) }
         
         let newDir = try! Vector3D.crossProduct(lhs: enil.getDirection(), rhs: enalp.normal)
         
@@ -328,14 +345,16 @@ public struct Plane: Equatable   {
     /// - Parameters:
     ///   - enil:  Line of interest
     ///   - enalp:  Flat surface to hit
-    /// - Throws: ParallelError if the input Line is parallel to the plane
+    /// - Throws:
+    ///   - ParallelError if the input Line is parallel to the plane
+    ///   - NegativeAccuracyError for bad 'accuracy' parameter
     /// - See: 'testIntersectLinePlane' under PlaneTests
-    public static func intersectLinePlane(enil: Line, enalp: Plane) throws -> Point3D {
+    public static func intersectLinePlane(enil: Line, enalp: Plane, accuracy: Double = Point3D.Epsilon) throws -> Point3D {
         
         // Bail if the line is parallel to the plane
         guard !Plane.isParallel(flat: enalp, enil: enil) else { throw ParallelError(enil: enil, enalp: enalp) }
         
-        if Plane.isCoincident(flat: enalp, pip: enil.getOrigin())  { return enil.getOrigin() }    // Shortcut!
+        if try Plane.isCoincident(flat: enalp, pip: enil.getOrigin(), accuracy: accuracy)  { return enil.getOrigin() }    // Shortcut!
         
         
         // Resolve the line direction into components normal to the plane and in plane
@@ -344,7 +363,7 @@ public struct Plane: Equatable   {
         let lineInPlaneComponent = enil.getDirection() - lineNormComponent
         
         
-        let projectedLineOrigin = Plane.projectToPlane(pip: enil.getOrigin(), enalp: enalp)
+        let projectedLineOrigin = try Plane.projectToPlane(pip: enil.getOrigin(), enalp: enalp)
         
         let drop = Vector3D.built(from: enil.getOrigin(), towards: projectedLineOrigin, unit: true)
         
@@ -368,13 +387,18 @@ public struct Plane: Equatable   {
     /// - Parameters:
     ///   - flatA:  First plane
     ///   - flatB:  Second plane
-    /// - Throws: ParallelPlanesError if the inputs are parallel
-    /// - Throws: CoincidentPlanesError if the inputs are coincident
+    /// - Throws:
+    ///   - ParallelPlanesError if the inputs are parallel
+    ///   - CoincidentPlanesError if the inputs are coincident
+    ///   - NegativeAccuracyError for bad 'accuracy' parameter
     /// - See: 'testIntersectPlanes' under PlaneTests
-    public static func intersectPlanes(flatA: Plane, flatB: Plane) throws -> Line   {
+    public static func intersectPlanes(flatA: Plane, flatB: Plane, accuracy: Double = Point3D.Epsilon) throws -> Line   {
         
+        guard accuracy > 0.0 else { throw NegativeAccuracyError(acc: accuracy) }
+            
            // This goes first to provide a better error message.
-        guard !Plane.isCoincident(flatLeft: flatA, flatRight: flatB)  else  { throw CoincidentPlanesError(enalpA: flatA) }
+        let flag1 = try Plane.isCoincident(flatLeft: flatA, flatRight: flatB, accuracy: accuracy)
+        guard !flag1  else  { throw CoincidentPlanesError(enalpA: flatA) }
         
         guard !Plane.isParallel(lhs: flatA, rhs: flatB)  else  { throw ParallelPlanesError(enalpA: flatA) }
         
@@ -403,11 +427,13 @@ public struct Plane: Equatable   {
     /// - Parameters:
     ///   - pip:  Point to be projected
     ///   - enalp:  Flat surface to hit
+    /// - Throws:
+    ///   - NegativeAccuracyError for bad 'accuracy' parameter
     /// - Returns: Closest point on plane
     /// - See: 'testProjectToPlane' under PlaneTests
-    public static func projectToPlane(pip: Point3D, enalp: Plane) -> Point3D  {
+    public static func projectToPlane(pip: Point3D, enalp: Plane, accuracy: Double = Point3D.Epsilon) throws -> Point3D  {
         
-        if Plane.isCoincident(flat: enalp, pip: pip) {return pip }    // Shortcut!
+        if try Plane.isCoincident(flat: enalp, pip: pip, accuracy: accuracy) {return pip }    // Shortcut!
         
         let planeCenter = enalp.getLocation()   // Referred to multiple times
         

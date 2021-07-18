@@ -85,11 +85,11 @@ public struct Point3D: Hashable {
     
     /// Flip point to the opposite side of the plane
     /// - Parameters:
-    ///   - flat:  Mirroring plane
     ///   - pip:  Point to be flipped
+    ///   - flat:  Mirroring plane
     /// - Returns: New point
     /// - See: 'testMirrorPoint' under PlaneTests
-    public static func mirror(flat: Plane, pip: Point3D) -> Point3D   {
+    public static func mirror(pip: Point3D, flat: Plane) -> Point3D   {
         
         /// Vector components from the Plane origin
         let comps = Plane.resolveRelativeVec(flat: flat, pip: pip)
@@ -213,6 +213,21 @@ public struct Point3D: Hashable {
         
         return CGPoint(x: pip.x, y: pip.y)
     }
+    
+    
+    /// Check to see that the distance between the two is less than Point3D.Epsilon
+    /// - Parameters:
+    ///   - lhs:  A point for comparison
+    ///   - rhs: Another point for comparison
+    ///   - accuracy: distance under which points will considered to be coincident
+    /// - Returns: A simple flag
+    public static func equals(lhs: Point3D, rhs: Point3D, accuracy: Double = Point3D.Epsilon) -> Bool   {
+        
+        let separation = Point3D.dist(pt1: lhs, pt2: rhs)   // Always positive
+        
+        return separation < accuracy
+    }
+    
     
     /// Check to see that the distance between the two is less than Point3D.Epsilon
     /// - See: 'testEqual' under Point3DTests

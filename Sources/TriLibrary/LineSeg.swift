@@ -107,18 +107,18 @@ public struct LineSeg: PenCurve, Equatable {
     ///   - wire:  LineSeg to be flipped
     /// - Returns: New LineSeg
     /// - See: 'testMirrorLineSeg' under PlaneTests
-    public static func mirror(flat: Plane, wire: LineSeg) -> LineSeg   {
+    public static func mirror(wire: LineSeg, flat: Plane) -> LineSeg   {
         
         /// Point to be worked on
         var pip: Point3D = wire.getOneEnd()
         
         ///New point from mirroring
-        let fairest1 = Point3D.mirror(flat: flat, pip: pip)
+        let fairest1 = Point3D.mirror(pip: pip, flat: flat)
         
         pip = wire.getOtherEnd()
         
         ///New point from mirroring
-        let fairest2 = Point3D.mirror(flat: flat, pip: pip)
+        let fairest2 = Point3D.mirror(pip: pip, flat: flat)
         
         let mirroredLineSeg = try! LineSeg(end1: fairest1, end2: fairest2)
         // The forced unwrapping should be no risk because it uses points from a LineSeg that has already checked out.
@@ -152,7 +152,7 @@ public struct LineSeg: PenCurve, Equatable {
     ///   - speck:  Point near the curve.
     /// - Returns: Flag, and optional parameter value
     /// - See: 'testPerch' under LineSegTests
-    public func isPerchFor(speck: Point3D) throws -> (flag: Bool, param: Double?)   {
+    public func isCoincident(speck: Point3D, accuracy: Double = Point3D.Epsilon) throws -> (flag: Bool, param: Double?)   {
         
            // Shortcuts!
         if speck == self.endAlpha   { return (true, self.trimParameters.lowerBound) }
@@ -163,7 +163,7 @@ public struct LineSeg: PenCurve, Equatable {
         
         let relPos = self.resolveRelativeVec(speck: speck)
         
-        if relPos.perp.length() > Point3D.Epsilon   { return (false, nil) }
+        if relPos.perp.length() > accuracy   { return (false, nil) }
         else {
             if relPos.along.length() < curveLength   {
                 

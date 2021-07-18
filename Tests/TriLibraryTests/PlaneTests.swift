@@ -259,17 +259,17 @@ class PlaneTests: XCTestCase {
         
         var trial = Point3D(x: 2.0, y: 5.0, z: 3.5)
         
-        XCTAssert(Plane.isCoincident(flat: playingField, pip: trial))
+        XCTAssert(try! Plane.isCoincident(flat: playingField, pip: trial))
         
         
         trial = Point3D(x: 1.9, y: 3.0, z: 4.0)
         
-        XCTAssertFalse(Plane.isCoincident(flat: playingField, pip: trial))
+        XCTAssertFalse(try! Plane.isCoincident(flat: playingField, pip: trial))
         
         
         trial = Point3D(x: 2.0, y: 3.0, z: 4.0)
         
-        XCTAssert(Plane.isCoincident(flat: playingField, pip: trial))
+        XCTAssert(try! Plane.isCoincident(flat: playingField, pip: trial))
         
     }
     
@@ -285,13 +285,13 @@ class PlaneTests: XCTestCase {
         
         var heli = try! Line(spot: gOrig, arrow: gNorm)
         
-        XCTAssertFalse(Plane.isCoincident(flat: playingField, enil: heli))
+        XCTAssertFalse(try! Plane.isCoincident(flat: playingField, enil: heli))
         
         let gOrig2 = Point3D(x: 2.0, y: 3.5, z: 6.0)
         gNorm = Vector3D(i: 0.0, j: 0.0, k: 1.0)
         heli = try! Line(spot: gOrig2, arrow: gNorm)
 
-        XCTAssert(Plane.isCoincident(flat: playingField, enil: heli))
+        XCTAssert(try! Plane.isCoincident(flat: playingField, enil: heli))
         
     }
     
@@ -327,7 +327,7 @@ class PlaneTests: XCTestCase {
         var pNorm = Vector3D(i: 0.0, j: 0.0, k: 1.0)
         var flat = try! Plane(spot: pOrig, arrow: pNorm)
         
-        XCTAssertFalse(Plane.isCoincident(flatLeft: flat, flatRight: playingField))
+        XCTAssertFalse(try! Plane.isCoincident(flatLeft: flat, flatRight: playingField))
         
         
         // Parallel, but not coincident
@@ -335,13 +335,13 @@ class PlaneTests: XCTestCase {
         
         flat = try! Plane(spot: pOrig, arrow: pNorm)
         
-        XCTAssertFalse(Plane.isCoincident(flatLeft: flat, flatRight: playingField))
+        XCTAssertFalse(try! Plane.isCoincident(flatLeft: flat, flatRight: playingField))
         
         
         pOrig = Point3D(x: 2.0, y: 3.1, z: 5.0)
         flat = try! Plane(spot: pOrig, arrow: pNorm)
         
-        XCTAssert(Plane.isCoincident(flatLeft: flat, flatRight: playingField))
+        XCTAssert(try! Plane.isCoincident(flatLeft: flat, flatRight: playingField))
         
     }
     
@@ -543,7 +543,7 @@ class PlaneTests: XCTestCase {
             // Test a point that already lies on the plane
         var standoff = Point3D(x: 2.0, y: 5.0, z: 3.5)
         
-        var trial = Plane.projectToPlane(pip: standoff, enalp: playingField)
+        var trial = try! Plane.projectToPlane(pip: standoff, enalp: playingField)
         
         var target = Point3D(x: 2.0, y: 5.0, z: 3.5)
         
@@ -552,7 +552,7 @@ class PlaneTests: XCTestCase {
         
         standoff = Point3D(x: 1.0, y: -1.2, z: 3.15)
         
-        trial = Plane.projectToPlane(pip: standoff, enalp: playingField)
+        trial = try! Plane.projectToPlane(pip: standoff, enalp: playingField)
         
         target = Point3D(x: 2.0, y: -1.2, z: 3.15)
         
@@ -596,7 +596,7 @@ class PlaneTests: XCTestCase {
 
         var heli = try! Line(spot: gOrig, arrow: gNorm)
 
-        XCTAssertFalse(Plane.isCoincident(flat: groundFloor, enil: heli))
+        XCTAssertFalse(try! Plane.isCoincident(flat: groundFloor, enil: heli))
 
         do   {
 
@@ -611,7 +611,7 @@ class PlaneTests: XCTestCase {
         gOrig = Point3D(x: 2.0, y: 3.1, z: 4.7)
         heli = try! Line(spot: gOrig, arrow: gNorm)
 
-        XCTAssert(Plane.isCoincident(flat: groundFloor, enil: heli))
+        XCTAssert(try! Plane.isCoincident(flat: groundFloor, enil: heli))
 
         let standup = try! Plane.buildPerpThruLine(enil: heli, enalp: groundFloor)
 

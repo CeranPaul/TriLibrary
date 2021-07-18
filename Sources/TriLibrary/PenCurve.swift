@@ -35,7 +35,7 @@ public protocol PenCurve   {
     
     func intersect(ray: Line, accuracy: Double) throws -> [Point3D]
         
-    func isPerchFor(speck: Point3D) throws -> (flag: Bool, param: Double?) 
+    func isCoincident(speck: Point3D, accuracy: Double) throws -> (flag: Bool, param: Double?) 
 
     /// Plot the curve.  Your classic example of polymorphism
     func draw(context: CGContext, tform: CGAffineTransform, allowableCrown: Double) throws

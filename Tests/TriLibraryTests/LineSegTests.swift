@@ -138,7 +138,7 @@ class LineSegTests: XCTestCase {
         
         let desired = try! LineSeg(end1: target1, end2: target2)
 
-        let fairest = LineSeg.mirror(flat: silver1, wire: wand)
+        let fairest = LineSeg.mirror(wire: wand, flat: silver1)
         
         XCTAssertEqual(fairest, desired)
         
@@ -310,30 +310,30 @@ class LineSegTests: XCTestCase {
         
         let t1 = Point3D(x: 5.0, y: 5.0, z: 5.0)
         
-        var sitRep = try! contrail.isPerchFor(speck: t1)
+        var sitRep = try! contrail.isCoincident(speck: t1)
         XCTAssertFalse(sitRep.flag)
         
         
         let t2 = Point3D(x: 5.0, y: 3.65, z: 3.65)
         
-        sitRep = try! contrail.isPerchFor(speck: t2)
+        sitRep = try! contrail.isCoincident(speck: t2)
         XCTAssert(sitRep.flag)
 
         let t3 = Point3D(x: 5.0, y: 2.5, z: 4.1)
         
-        sitRep = try! contrail.isPerchFor(speck: t3)
+        sitRep = try! contrail.isCoincident(speck: t3)
         XCTAssertFalse(sitRep.flag)
         
         
         let t4 = Point3D(x: 5.0, y: 0.5, z: 0.5)
         
-        sitRep = try! contrail.isPerchFor(speck: t4)
+        sitRep = try! contrail.isCoincident(speck: t4)
         XCTAssertFalse(sitRep.flag)
         
-        sitRep = try! contrail.isPerchFor(speck: ptA)
+        sitRep = try! contrail.isCoincident(speck: ptA)
         XCTAssert(sitRep.flag)
 
-        sitRep = try! contrail.isPerchFor(speck: ptB)
+        sitRep = try! contrail.isCoincident(speck: ptB)
         XCTAssert(sitRep.flag)
 
     }

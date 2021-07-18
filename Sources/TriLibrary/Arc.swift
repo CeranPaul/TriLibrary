@@ -104,18 +104,20 @@ public struct Arc: PenCurve, Equatable   {
     ///   - end1: Starting point
     ///   - end2: Final point
     ///   - useSmallAngle: Flag to indicate which of the two possible Arcs to use
+    ///   - accuracy: When to consider radii equal
     /// - Throws:
     ///   - ArcPointsError for a bad set of inputs
     ///   - CoincidentPointsError for identical endpoints
     ///   - CoincidentPointsError for collinear points
     /// - See: 'testFidelityThreePoints' under ArcTests
-    public init(center: Point3D, end1: Point3D, end2: Point3D, useSmallAngle: Bool) throws   {
+    public init(center: Point3D, end1: Point3D, end2: Point3D, useSmallAngle: Bool, accuracy: Double = Point3D.Epsilon) throws   {
         
         let rad1 = Point3D.dist(pt1: center, pt2: end1)
         let rad2 = Point3D.dist(pt1: center, pt2: end2)
         
-        guard abs(rad1 - rad2) < Point3D.Epsilon else { throw ArcPointsError(badPtA: center, badPtB: end1, badPtC: end2) }
+        guard abs(rad1 - rad2) < accuracy else { throw ArcPointsError(badPtA: center, badPtB: end1, badPtC: end2) }
 
+        //TODO: Consider changes here to account for accuracy input
         guard end1 != end2 else { throw CoincidentPointsError(dupePt: end1) }
         
         //TODO: Needs a better error type
@@ -361,14 +363,15 @@ public struct Arc: PenCurve, Equatable   {
     /// Check whether a point is or isn't perched on the curve.
     /// - Parameters:
     ///   - speck:  Point near the curve.
+    ///   - accuracy: When to consider radii equal
     /// - Returns: Flag, and optional parameter value
     /// - See: 'testPerch' under ArcTests
-    public func isPerchFor(speck: Point3D) throws -> (flag: Bool, param: Double?)   {
+    public func isCoincident(speck: Point3D, accuracy: Double = Point3D.Epsilon) throws -> (flag: Bool, param: Double?)   {
         
         /// The target point in the local coordinate system
         let speckLocal = speck.transform(xirtam: self.fromGlobal)
         
-        if abs(speckLocal.z) > Point3D.Epsilon    { return (false, nil) }
+        if abs(speckLocal.z) > accuracy    { return (false, nil) }
 
            // Shortcuts!
         if speck == self.startPt   { return (true, self.trimParameters.lowerBound) }

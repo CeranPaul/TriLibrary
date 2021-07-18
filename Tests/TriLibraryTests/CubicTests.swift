@@ -341,19 +341,19 @@ class CubicTests: XCTestCase {
         
         let t1 = Point3D(x: -1.2, y: 0.01, z: -0.2)
         
-        var sitRep = try! rolling.isPerchFor(speck: t1)
+        var sitRep = try! rolling.isCoincident(speck: t1)
         
         XCTAssertFalse(sitRep.flag)
         
            // Set up a point known to be on the curve
         let t2 = Point3D(x: -1.2, y: 0.5448, z: 0.8165)
         
-        sitRep = try! rolling.isPerchFor(speck: t2)
+        sitRep = try! rolling.isCoincident(speck: t2)
         XCTAssert(sitRep.flag)
         
         let t3 = Point3D(x: -1.2, y: 1.25, z: 0.30)
         
-        sitRep = try! rolling.isPerchFor(speck: t3)
+        sitRep = try! rolling.isCoincident(speck: t3)
         XCTAssertFalse(sitRep.flag)
         
     }

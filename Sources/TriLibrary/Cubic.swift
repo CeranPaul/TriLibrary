@@ -594,12 +594,12 @@ public struct Cubic: PenCurve   {
     }
     
     
-        /// Check whether a point is or isn't perched on the curve.
-        /// - Parameters:
-        ///   - speck:  Point near the curve.
-        /// - Returns: Flag, and optional parameter value
-        /// - See: 'testPerch' under CubicTests
-        public func isPerchFor(speck: Point3D) throws -> (flag: Bool, param: Double?)   {
+    /// Check whether a point is or isn't perched on the curve.
+    /// - Parameters:
+    ///   - speck:  Point near the curve.
+    /// - Returns: Flag, and optional parameter value
+    /// - See: 'testPerch' under CubicTests
+    public func isCoincident(speck: Point3D, accuracy: Double = Point3D.Epsilon) throws -> (flag: Bool, param: Double?)   {
             
                // Shortcuts!
             if speck == self.ptAlpha   { return (true, self.trimParameters.lowerBound) }
@@ -634,7 +634,7 @@ public struct Cubic: PenCurve   {
             nearCurveParam = try convergeMinDist(speck: speck, span: startSpan, curve: self, layersRemaining: 8)
             
             let nearCurvePoint = try self.pointAt(t: nearCurveParam)
-            let flag = Point3D.dist(pt1: nearCurvePoint, pt2: speck) < Point3D.Epsilon
+            let flag = Point3D.dist(pt1: nearCurvePoint, pt2: speck) < accuracy
             
             return (flag, nearCurveParam)
         }

@@ -76,21 +76,21 @@ class Point3DTests: XCTestCase {
         let silver1 = try! Plane(spot: nexus, arrow: XYdir)
         let target1 = Point3D(x: 1.5, y: 1.5, z: -1.5)
         
-        var fairest = Point3D.mirror(flat: silver1, pip: lanigiro)
+        var fairest = Point3D.mirror(pip: lanigiro, flat: silver1)
         XCTAssertEqual(fairest, target1)
         
         let XZdir = Vector3D(i: 0.0, j: 1.0, k: 0.0)
         let silver2 = try! Plane(spot: nexus, arrow: XZdir)
         let target2 = Point3D(x: 1.5, y: -1.5, z: 1.5)
 
-        fairest = Point3D.mirror(flat: silver2, pip: lanigiro)
+        fairest = Point3D.mirror(pip: lanigiro, flat: silver2)
         XCTAssertEqual(fairest, target2)
         
         let YZdir = Vector3D(i: 1.0, j: 0.0, k: 0.0)
         let silver3 = try! Plane(spot: nexus, arrow: YZdir)
         let target3 = Point3D(x: -1.5, y: 1.5, z: 1.5)
 
-        fairest = Point3D.mirror(flat: silver3, pip: lanigiro)
+        fairest = Point3D.mirror(pip: lanigiro, flat: silver3)
         XCTAssertEqual(fairest, target3)
         
     }
@@ -159,6 +159,17 @@ class Point3DTests: XCTestCase {
         XCTAssert(trial3 != target2)
         
     }
+    
+    func testEqualsAcc()   {
+        
+        let trialA = Point3D(x: -3.1, y: 6.8 + 0.01, z: -1.4)
+        let trialB = Point3D(x: -3.1, y: 6.8, z: -1.4)
+
+        XCTAssertFalse(Point3D.equals(lhs: trialA, rhs: trialB))
+
+        XCTAssert(Point3D.equals(lhs: trialA, rhs: trialB, accuracy: 0.05))
+    }
+    
     
     func testMakeCGPoint()   {
         
